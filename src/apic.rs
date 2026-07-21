@@ -12,7 +12,7 @@ pub fn enable(acpi: &AcpiTables<AcpiHandler>, hhdm: u64) {
     let svr = (lapic_virt_address + 0xF0) as *mut u32;
 
     unsafe {
-        // Set bit 8 & spurious vector interrupt
+        // Set bit 8 & spurious vector interrupt to index 255/0xFF
         ptr::write_volatile(svr, 0x1FF);
     }
 }

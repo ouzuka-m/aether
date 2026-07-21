@@ -33,6 +33,9 @@ lazy_static! {
         idt.vmm_communication_exception.set_handler_fn(handlers::vmm_communication_exception); // Vector 29
         idt.security_exception.set_handler_fn(handlers::security_exception); // Vector 30
 
+        // Hardware interrupts
+        idt[255].set_handler_fn(handlers::spurious_vector_interrupt);
+
         // Need to switch to a different stack for some interrupts
         unsafe {
             idt.double_fault
