@@ -1,13 +1,16 @@
-use x86_64::{VirtAddr, registers::control::Cr3, structures::paging::OffsetPageTable};
+use x86_64::{registers::control::Cr3, structures::paging::OffsetPageTable};
 
-pub fn init(hhdm: VirtAddr) -> OffsetPageTable<'static> {
+use crate::address::{ext::PhysExt, hhdm::HHDM};
+
+pub fn init() -> OffsetPageTable<'static> {
     let (level_4_frame, _) = Cr3::read();
 
-    let start_address = level_4_frame.start_address();
-    let virt = hhdm + start_address.as_u64();
+    let phys = level_4_frame.start_address();
+    let virt = phys.to_virt();
 
     unsafe {
         let level_4_table = &mut *virt.as_mut_ptr();
-        OffsetPageTable::new(level_4_table, hhdm) // Both hhdm & phys offset same
+
+        OffsetPageTable::new(level_4_table, *HHDM) // Both hhdm & phys offset same
     }
 }
