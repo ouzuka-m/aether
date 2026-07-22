@@ -7,7 +7,7 @@ use x86_64::{
 #[global_allocator]
 static ALLOCATOR: LockedHeap<33> = LockedHeap::empty();
 
-pub const HEAP_START: usize = 0x4444_4444_0000;
+pub const HEAP_START: usize = 0xFFFF_9000_0000_0000;
 pub const HEAP_SIZE: usize = 1000 * 1024; // 1 MB, 250 pages
 
 pub fn init(
