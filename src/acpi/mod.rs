@@ -23,7 +23,7 @@ pub fn init() {
     let rsdp_address = VirtAddr::new(rsdp_response.address as u64).to_phys();
 
     let tables = unsafe {
-        AcpiTables::from_rsdp(AcpiHandler, rsdp_address.as_u64() as usize)
+        AcpiTables::from_rsdp(AcpiHandler, rsdp_address.as_usize())
             .expect("failed to initialize ACPI tables")
     };
 

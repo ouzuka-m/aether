@@ -4,6 +4,8 @@ use crate::address::hhdm::HHDM;
 
 pub trait PhysExt {
     fn to_virt(self) -> VirtAddr;
+
+    fn as_usize(&self) -> usize;
 }
 
 pub trait VirtExt {
@@ -15,6 +17,10 @@ pub trait VirtExt {
 impl PhysExt for PhysAddr {
     fn to_virt(self) -> VirtAddr {
         VirtAddr::new((*HHDM).as_u64() + self.as_u64())
+    }
+
+    fn as_usize(&self) -> usize {
+        self.as_u64() as usize
     }
 }
 
