@@ -12,10 +12,9 @@ lazy_static! {
 
 pub fn _print(args: ::core::fmt::Arguments) {
     interrupts::without_interrupts(|| {
-        SERIAL
-            .lock()
-            .write_fmt(args)
-            .expect("Printing to serial failed");
+        if let Some(mut serial) = SERIAL.try_lock() {
+            let _ = serial.write_fmt(args);
+        }
     });
 }
 
