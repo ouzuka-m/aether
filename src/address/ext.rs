@@ -9,8 +9,6 @@ pub trait PhysExt {
 pub trait VirtExt {
     fn to_phys(self) -> PhysAddr;
 
-    fn as_usize(&self) -> usize;
-
     fn offset(&self, offset: u64) -> VirtAddr;
 }
 
@@ -23,10 +21,6 @@ impl PhysExt for PhysAddr {
 impl VirtExt for VirtAddr {
     fn to_phys(self) -> PhysAddr {
         PhysAddr::new(self.as_u64() - (*HHDM).as_u64())
-    }
-
-    fn as_usize(&self) -> usize {
-        self.as_u64() as usize
     }
 
     fn offset(&self, offset: u64) -> VirtAddr {

@@ -1,11 +1,12 @@
 use core::ptr::NonNull;
 
 use acpi::{Handle, Handler, PciAddress, PhysicalMapping, aml::AmlError};
+use x86_64::PhysAddr;
+
+use crate::address::ext::PhysExt;
 
 #[derive(Clone)]
-pub struct AcpiHandler {
-    pub hhdm: usize,
-}
+pub struct AcpiHandler;
 
 impl Handler for AcpiHandler {
     unsafe fn map_physical_region<T>(
@@ -13,11 +14,13 @@ impl Handler for AcpiHandler {
         physical_address: usize,
         size: usize,
     ) -> PhysicalMapping<Self, T> {
-        let virt = self.hhdm + physical_address;
+        let ptr: *mut T = PhysAddr::new(physical_address as u64)
+            .to_virt()
+            .as_mut_ptr();
 
         PhysicalMapping {
             physical_start: physical_address,
-            virtual_start: NonNull::new(virt as *mut T).unwrap(),
+            virtual_start: NonNull::new(ptr).unwrap(),
             region_length: size,
             mapped_length: size,
             handler: self.clone(),

@@ -1,10 +1,7 @@
 pub mod handler;
 pub mod lapic;
 
-use crate::address::{
-    ext::{PhysExt, VirtExt},
-    hhdm::HHDM,
-};
+use crate::address::ext::{PhysExt, VirtExt};
 
 use self::handler::AcpiHandler;
 
@@ -24,16 +21,14 @@ pub fn init() {
 
     // Get physical RSDP address
     let rsdp_address = VirtAddr::new(rsdp_response.address as u64).to_phys();
-    let handler = AcpiHandler {
-        hhdm: HHDM.as_usize(),
-    };
 
     let tables = unsafe {
-        AcpiTables::from_rsdp(handler.clone(), rsdp_address.as_u64() as usize)
+        AcpiTables::from_rsdp(AcpiHandler, rsdp_address.as_u64() as usize)
             .expect("failed to initialize ACPI tables")
     };
 
-    let plaform = AcpiPlatform::new(tables, handler).expect("failed to initialize ACPI platform");
+    let plaform =
+        AcpiPlatform::new(tables, AcpiHandler).expect("failed to initialize ACPI platform");
 
     match plaform.interrupt_model {
         InterruptModel::Apic(apic) => {
