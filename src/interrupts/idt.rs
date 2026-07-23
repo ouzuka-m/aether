@@ -57,4 +57,5 @@ lazy_static! {
 
 pub fn init() {
     INTERRUPT_DESCRIPTOR_TABLE.load();
+    crate::info!("IDT loaded");
 }

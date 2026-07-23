@@ -42,4 +42,10 @@ pub fn init(
     unsafe {
         ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
     }
+
+    crate::info!(
+        "Heap allocator initialized at {:#X} ({} KB)",
+        HEAP_START,
+        HEAP_SIZE / 1024
+    );
 }

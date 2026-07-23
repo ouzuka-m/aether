@@ -33,4 +33,6 @@ pub fn init() {
         CS::set_reg(selectors.code);
         tables::load_tss(selectors.tss);
     }
+
+    crate::info!("GDT and TSS loaded");
 }

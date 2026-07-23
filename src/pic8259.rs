@@ -8,4 +8,6 @@ pub fn disable() {
         master.write(0xFF);
         slave.write(0xFF);
     }
+
+    crate::info!("Legacy 8259 PIC disabled");
 }

@@ -18,4 +18,6 @@ pub fn enable(lapic_address: VirtAddr) {
 
         core::ptr::write_volatile(svr, svr_value);
     }
+
+    crate::info!("Local APIC enabled");
 }

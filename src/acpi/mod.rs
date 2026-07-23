@@ -37,4 +37,6 @@ pub fn init() {
         }
         _ => panic!("unknown interrupt model. Can't handle IRQs"),
     };
+
+    crate::info!("ACPI platform initialized");
 }

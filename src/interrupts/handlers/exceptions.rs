@@ -1,6 +1,6 @@
 use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
 
-use crate::println;
+use crate::{debug, info, warn};
 
 /// Vector 0: Divide Error (#DE)
 ///
@@ -25,7 +25,7 @@ pub extern "x86-interrupt" fn divide_error(stack_frame: InterruptStackFrame) {
 /// # Behavior
 /// Prints the exception name along with the interrupt stack frame.
 pub extern "x86-interrupt" fn debug(stack_frame: InterruptStackFrame) {
-    println!("Exception: Debug\nStack Frame: {:#?}", stack_frame);
+    debug!("Exception: Debug\nStack Frame: {:#?}", stack_frame);
 }
 
 /// Vector 2: Non-Maskable Interrupt (#NMI)
@@ -55,7 +55,7 @@ pub extern "x86-interrupt" fn non_maskable_interrupt(stack_frame: InterruptStack
 /// # Behavior
 /// Prints the exception name and the stack frame.
 pub extern "x86-interrupt" fn breakpoint(stack_frame: InterruptStackFrame) {
-    println!("Exception: Breakpoint\nStack Frame: {:#?}", stack_frame);
+    info!("Exception: Breakpoint\nStack Frame: {:#?}", stack_frame);
 }
 
 /// Vector 4: Overflow (#OF)
@@ -110,7 +110,7 @@ pub extern "x86-interrupt" fn invalid_opcode(stack_frame: InterruptStackFrame) {
 /// # Behavior
 /// Prints the exception details and the stack frame.
 pub extern "x86-interrupt" fn device_not_available(stack_frame: InterruptStackFrame) {
-    println!(
+    warn!(
         "Exception: Device Not Available\nStack Frame: {:#?}",
         stack_frame
     );
@@ -159,7 +159,7 @@ pub extern "x86-interrupt" fn segment_not_present(
     stack_frame: InterruptStackFrame,
     error_code: u64,
 ) {
-    println!(
+    warn!(
         "Exception: Segment Not Present\nError Code: {}\nStack Frame: {:#?}",
         error_code, stack_frame
     );
@@ -178,7 +178,7 @@ pub extern "x86-interrupt" fn stack_segment_fault(
     stack_frame: InterruptStackFrame,
     error_code: u64,
 ) {
-    println!(
+    warn!(
         "Exception: Stack Segment Fault\nError Code: {}\nStack Frame: {:#?}",
         error_code, stack_frame
     );

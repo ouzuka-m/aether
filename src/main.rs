@@ -8,9 +8,9 @@ mod acpi;
 mod address;
 mod gdt;
 mod interrupts;
+mod log;
 mod memory;
 mod pic8259;
-mod serial;
 mod stacks;
 mod tss;
 
@@ -24,6 +24,8 @@ use memory::{frame_allocator, heap_allocator, mapper};
 extern "C" fn _start() -> ! {
     // Disable the CPU interrupts
     x86_64::instructions::interrupts::disable();
+
+    info!("Aether Kernel starting...");
 
     // Load Global Descriptor Table (GDT)
     gdt::init();
@@ -42,7 +44,7 @@ extern "C" fn _start() -> ! {
 
     acpi::init();
 
-    println!("Hello, World!");
+    info!("Kernel initialized successfully. Entering idle loop.");
 
     loop {
         // Ready to accept interrupts & quickly enter the sleep mode
@@ -54,7 +56,7 @@ extern "C" fn _start() -> ! {
 fn panic(info: &PanicInfo) -> ! {
     x86_64::instructions::interrupts::disable();
 
-    println!("{}", info);
+    error!("{}", info);
 
     loop {
         instructions::hlt();
