@@ -11,10 +11,10 @@ categories = ["os", "no-std", "memory-management", "filesystem", "embedded"]
 
 [dependencies]
 limine = "0.6"
-x86_64 = "0.15"
-spin = "0.12"
+x86_64 = { version = "0.15", default-features = false, features = ["instructions", "abi_x86_interrupt"] }
+spin = { version = "0.12", default-features = false, features = ["spin_mutex"] }
 uart_16550 = "0.6"
-buddy_system_allocator = "0.13"
+buddy_system_allocator = { version = "0.13", default-features = false, features = ["use_spin"] }
 acpi = "6.1"
 lazy_static = { version = "1.5", features = ["spin_no_std"] }
 
