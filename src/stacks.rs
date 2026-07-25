@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 pub const STACK_SIZE: usize = 4096 * 8; // 32 KiB
 
 // Double Fault
