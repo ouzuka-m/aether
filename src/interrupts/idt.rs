@@ -1,7 +1,10 @@
 use lazy_static::lazy_static;
 use x86_64::structures::idt::InterruptDescriptorTable;
 
-use crate::{interrupts::handlers, stacks};
+use crate::{
+    interrupts::handlers::{self, KEYBOARD_IDX, SVR_IDX, TIMER_IDX},
+    stacks,
+};
 
 lazy_static! {
     static ref INTERRUPT_DESCRIPTOR_TABLE: InterruptDescriptorTable = {
@@ -34,7 +37,9 @@ lazy_static! {
         idt.security_exception.set_handler_fn(handlers::security_exception); // Vector 30
 
         // Hardware interrupts
-        idt[255].set_handler_fn(handlers::spurious_vector_interrupt);
+        idt[TIMER_IDX].set_handler_fn(handlers::timer);
+        idt[KEYBOARD_IDX].set_handler_fn(handlers::keyboard);
+        idt[SVR_IDX].set_handler_fn(handlers::spurious_vector_interrupt);
 
         // Need to switch to a different stack for some interrupts
         unsafe {

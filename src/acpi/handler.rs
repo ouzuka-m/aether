@@ -1,34 +1,60 @@
+//! ACPI table memory handler implementation.
+//!
+//! Provides the [`AcpiHandler`] type which implements the [`acpi::Handler`] trait,
+//! allowing the `acpi` crate to map physical memory addresses into kernel virtual memory space.
+
 use core::ptr::NonNull;
 
 use acpi::{Handle, Handler, PciAddress, PhysicalMapping, aml::AmlError};
 use x86_64::PhysAddr;
 
-use crate::address::ext::PhysExt;
+use crate::{address::ext::PhysExt, debug};
 
+/// Kernel implementation of the `acpi::Handler` trait.
+///
+/// Responsible for translating physical memory addresses to virtual addresses
+/// using higher-half kernel direct mapping during ACPI table discovery.
 #[derive(Clone)]
 pub struct AcpiHandler;
 
 impl Handler for AcpiHandler {
+    /// Maps a physical memory region into virtual address space for ACPI table parsing.
+    ///
+    /// # Safety
+    /// Caller must ensure that `physical_address` points to valid physical memory
+    /// mapped into kernel virtual space.
     unsafe fn map_physical_region<T>(
         &self,
         physical_address: usize,
         size: usize,
     ) -> PhysicalMapping<Self, T> {
-        let ptr: *mut T = PhysAddr::new(physical_address as u64)
-            .to_virt()
-            .as_mut_ptr();
+        let virt_addr = PhysAddr::new(physical_address as u64).to_virt();
+        debug!(
+            "ACPI map_physical_region: Phys {:#x} -> Virt {:#x} (Size: {} bytes)",
+            physical_address,
+            virt_addr.as_u64(),
+            size
+        );
+
+        let ptr: *mut T = virt_addr.as_mut_ptr();
 
         PhysicalMapping {
             physical_start: physical_address,
-            virtual_start: NonNull::new(ptr).unwrap(),
+            virtual_start: NonNull::new(ptr).expect("virtual address pointer cannot be null"),
             region_length: size,
             mapped_length: size,
             handler: self.clone(),
         }
     }
 
-    fn unmap_physical_region<T>(_: &PhysicalMapping<Self, T>) {
-        // Nothing
+    /// Unmaps a previously mapped physical region.
+    ///
+    /// In higher-half physical identity mapping, memory remains mapped, so this operation is a no-op.
+    fn unmap_physical_region<T>(region: &PhysicalMapping<Self, T>) {
+        debug!(
+            "ACPI unmap_physical_region: Phys {:#x} (Size: {} bytes)",
+            region.physical_start, region.region_length
+        );
     }
 
     fn read_u8(&self, _: usize) -> u8 {

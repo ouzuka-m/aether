@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use x86_64::{
     instructions::tables,
-    registers::segmentation::{CS, Segment},
+    registers::segmentation::{CS, SS, Segment},
     structures::gdt::{Descriptor, GlobalDescriptorTable, SegmentSelector},
 };
 
@@ -10,6 +10,7 @@ use crate::tss::TASK_STATE_SEGMENT;
 struct Selectors {
     tss: SegmentSelector,
     code: SegmentSelector,
+    data: SegmentSelector,
 }
 
 lazy_static! {
@@ -18,8 +19,9 @@ lazy_static! {
 
         let tss = gdt.append(Descriptor::tss_segment(&TASK_STATE_SEGMENT));
         let code = gdt.append(Descriptor::kernel_code_segment());
+        let data = gdt.append(Descriptor::kernel_data_segment());
 
-        let selectors = Selectors { tss, code };
+        let selectors = Selectors { tss, code, data };
 
         (gdt, selectors)
     };
@@ -31,6 +33,8 @@ pub fn init() {
     gdt.load();
     unsafe {
         CS::set_reg(selectors.code);
+        SS::set_reg(selectors.data);
+
         tables::load_tss(selectors.tss);
     }
 

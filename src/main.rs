@@ -10,12 +10,11 @@ mod gdt;
 mod interrupts;
 mod log;
 mod memory;
-mod pic8259;
 mod stacks;
 mod tss;
 
 use core::panic::PanicInfo;
-use x86_64::instructions;
+use x86_64::instructions::{self};
 
 use interrupts::idt;
 use memory::{frame_allocator, heap_allocator, mapper};
@@ -32,9 +31,6 @@ extern "C" fn _start() -> ! {
 
     // Load Interrupt Descriptor Table (IDT)
     idt::init();
-
-    // Disable old Intel 8259 Programmable Interrupt Controller (PIC)
-    pic8259::disable();
 
     // Set up the allocator
     let mut mapper = mapper::init();
