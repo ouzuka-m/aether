@@ -1,9 +1,12 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+// You can change the log level here.
+pub const LOG_LEVEL: Level = Level::Debug;
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq)]
 pub enum Level {
-    Debug,
-    Info,
-    Warn,
-    Error,
+    Debug = 0,
+    Info = 1,
+    Warn = 2,
+    Error = 3,
 }
 
 impl Level {

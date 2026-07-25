@@ -1,10 +1,17 @@
 use core::fmt::{Arguments, Write};
 use x86_64::instructions::interrupts;
 
-use crate::log::{level::Level, uart::SERIAL};
+use crate::log::{
+    level::{LOG_LEVEL, Level},
+    uart::SERIAL,
+};
 
 /// Internal logging function used by the logging macros.
 pub fn _log(level: Level, args: Arguments) {
+    if level < LOG_LEVEL {
+        return;
+    }
+
     let timestamp = unsafe { core::arch::x86_64::_rdtsc() };
     let args = format_args!("[{}] [{}] {}\n", timestamp, level.as_str(), args);
 
