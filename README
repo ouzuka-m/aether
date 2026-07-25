@@ -1,0 +1,69 @@
+Aether Kernel - Experimental Operating System in Rust
+======================================================
+
+WHAT IS AETHER?
+---------------
+  Aether is an experimental 64-bit operating system kernel written in Rust.
+  It aims to provide a modular, safe, and modern kernel architecture targeting
+  x86_64 systems using the Limine boot protocol.
+
+HARDWARE & ARCHITECTURE SUPPORT
+-------------------------------
+  Aether currently targets the 64-bit x86 architecture (x86_64-unknown-none).
+  It is designed to run on bare-metal x86_64 hardware or hypervisors / emulators
+  such as QEMU.
+
+PREREQUISITES
+---------------
+  To compile and run Aether, the following packages and tools are required:
+
+  - Rust Toolchain:
+      rustc (2024 edition support) with `x86_64-unknown-none` target
+      cargo
+  - Bootloader & ISO Utilities:
+      xorriso (required to create bootable ISO images)
+      Limine bootloader binaries (pre-configured in `iso/boot/`)
+  - Emulator:
+      qemu-system-x86_64
+
+BUILDING THE KERNEL
+-------------------
+  Build scripts are provided in the `build/` directory.
+
+  1. Debug Build:
+       $ ./build/debug.sh
+
+     This command compiles the kernel in debug mode, places the ELF binary
+     into `iso/boot/aether.elf`, and creates the bootable `aether.iso` image.
+
+  2. Release Build:
+       $ ./build/release.sh
+
+     This command compiles the kernel with optimizations and generates the final
+     `aether.iso` image.
+
+RUNNING WITH QEMU
+-----------------
+  After building `aether.iso`, you can launch it in QEMU using one of the
+  following commands:
+
+  Standard Execution:
+    $ qemu-system-x86_64 -cdrom aether.iso
+
+  With Serial Output to Terminal:
+    $ qemu-system-x86_64 -cdrom aether.iso -serial stdio
+
+DIRECTORY LAYOUT
+-----------------
+  build/      - Build automation scripts (debug.sh and release.sh).
+  iso/        - ISO structure containing Limine bootloader configuration and binaries.
+  src/        - Core kernel source code written in Rust (GDT, interrupts, memory, ACPI, logging).
+  targets/    - Target specification files for target architecture configuration.
+  linker.ld   - Linker script specifying kernel section placement in memory.
+  Cargo.toml  - Package manifest and crate dependencies.
+  LICENSE     - GNU General Public License v2.0 (GPL-2.0).
+
+LICENSE
+-------
+  Aether is distributed under the terms of the GNU General Public License v2.0 (GPL-2.0).
+  See the LICENSE file for details.
