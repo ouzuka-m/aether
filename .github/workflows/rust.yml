@@ -1,0 +1,39 @@
+name: Rust Kernel CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly-2026-06-01
+        with:
+          components: rustfmt, clippy, rust-src
+
+      - name: Set up cache
+        uses: Swatinem/rust-cache@v2
+
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 xorriso
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Check
+        run: cargo clippy -- -D warnings
+
+      - name: Build
+        run: bash ./build/release.sh
+
+      - name: Run
+        run: timeout 30s qemu-system-x86_64 -cdrom aether.iso -serial stdio -display none -device isa-debug-exit,iobase=0xf4 | tee serial.log
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: serial-log
+          path: serial.log

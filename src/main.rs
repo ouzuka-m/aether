@@ -15,6 +15,7 @@ mod acpi;
 mod address;
 mod gdt;
 mod interrupts;
+mod isa_debug;
 mod log;
 mod memory;
 mod stacks;
@@ -64,6 +65,8 @@ extern "C" fn _start() -> ! {
 
     info!("Kernel initialized successfully. Entering idle loop.");
 
+    isa_debug::exit_success();
+
     // Step 7: Enable CPU interrupts and enter low-power idle loop
     loop {
         // Re-enable interrupts and halt CPU until next hardware interrupt arrives
@@ -90,9 +93,10 @@ fn panic(info: &PanicInfo) -> ! {
     // Output formatted panic details to serial logger
     error!("{}", info);
 
+    isa_debug::exit_failure();
+
     // Enter infinite halt loop
     loop {
         instructions::hlt();
     }
 }
-
