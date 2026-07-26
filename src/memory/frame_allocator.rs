@@ -11,22 +11,33 @@ static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
 
 pub struct PhysFrameAllocator {
     entries: &'static [&'static Entry],
-    next: usize,
+    current_entry: usize,
+    current_addr: u64,
 }
 
 unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
     fn allocate_frame(&mut self) -> Option<PhysFrame<Size4KiB>> {
-        let mut frames = self
-            .entries
-            .iter()
-            .filter(|entry| entry.type_ == MEMMAP_USABLE)
-            .flat_map(|entry| (entry.base..(entry.base + entry.length)).step_by(4096))
-            .map(|addr| PhysFrame::containing_address(PhysAddr::new(addr)));
+        loop {
+            let entry = self.entries.get(self.current_entry)?;
+            if entry.type_ != MEMMAP_USABLE {
+                self.current_entry += 1;
+                continue;
+            }
 
-        let frame = frames.nth(self.next);
-        self.next += 1;
+            if self.current_addr == 0 {
+                self.current_addr = entry.base;
+            }
 
-        frame
+            if self.current_addr < entry.base + entry.length {
+                let addr = self.current_addr;
+                self.current_addr += 4096;
+
+                return Some(PhysFrame::containing_address(PhysAddr::new(addr)));
+            }
+
+            self.current_entry += 1;
+            self.current_addr = 0;
+        }
     }
 }
 
@@ -37,6 +48,7 @@ pub fn init() -> PhysFrameAllocator {
 
     PhysFrameAllocator {
         entries: response.entries(),
-        next: 0,
+        current_entry: 0,
+        current_addr: 0,
     }
 }
