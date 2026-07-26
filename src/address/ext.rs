@@ -44,4 +44,3 @@ impl VirtExt for VirtAddr {
         VirtAddr::new(self.as_u64() + offset)
     }
 }
-

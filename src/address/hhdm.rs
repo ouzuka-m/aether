@@ -23,4 +23,3 @@ lazy_static::lazy_static! {
         VirtAddr::new(hhdm_response.offset)
     };
 }
-

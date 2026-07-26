@@ -41,4 +41,3 @@ fn create_stack() -> VirtAddr {
     let stack_start = VirtAddr::from_ptr(&raw const STACK);
     stack_start + stacks::STACK_SIZE as u64
 }
-

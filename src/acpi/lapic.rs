@@ -79,7 +79,11 @@ pub fn enable(lapic_address: u64) {
 /// equal priority interrupts to be delivered.
 pub fn eoi() {
     unsafe {
-        let ptr: *mut u32 = LAPIC.get_unchecked().address.offset(LAPIC_EOI_REG).as_mut_ptr();
+        let ptr: *mut u32 = LAPIC
+            .get_unchecked()
+            .address
+            .offset(LAPIC_EOI_REG)
+            .as_mut_ptr();
 
         ptr::write_volatile(ptr, 0);
     }

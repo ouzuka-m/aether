@@ -68,4 +68,3 @@ pub fn init() {
 
     crate::info!("GDT and TSS loaded");
 }
-

@@ -14,4 +14,3 @@ pub const NMI_INDEX: u16 = 1;
 
 /// IST index for the Machine Check Exception (#MC) stack.
 pub const MCE_INDEX: u16 = 2;
-
