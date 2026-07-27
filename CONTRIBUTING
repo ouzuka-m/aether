@@ -1,0 +1,168 @@
+Contributing to Aether
+======================
+
+  Thank you for your interest in contributing to Aether! This is an
+  experimental operating system kernel written in Rust, so contributions of
+  any size are welcome -- from fixing a typo to stabilizing a subsystem.
+
+  This document outlines how to get started, what areas need the most help,
+  and what conventions to follow.
+
+
+WHAT WE NEED HELP WITH
+-----------------------
+
+  Aether is still in its early stages. The most valuable contributions right
+  now fall into two main categories:
+
+  1. Stabilizing the Codebase
+
+     The kernel is functional but rough in many places. Help is needed to:
+
+     - Fix panics and undefined behaviour -- Audit unsafe blocks and ensure
+       invariants are upheld. Add comments explaining why a block of unsafe
+       code is sound.
+     - Improve error handling -- Replace silent failures or panics-on-error
+       with proper propagation where possible.
+     - Add or improve documentation -- Inline doc comments (///) on public
+       types, functions, and modules make the kernel far easier to navigate.
+     - Write and expand tests -- Unit tests for logic that can run on the
+       host, and integration tests that boot the kernel in QEMU and verify
+       output via the serial log.
+     - Reduce #[allow(...)] suppressions -- If a suppression is hiding a real
+       problem, fix the root cause rather than silencing the lint.
+     - Clean up TODOs and FIXMEs -- The codebase contains a number of known
+       rough edges. Picking one up and resolving it is a great first
+       contribution.
+
+  2. Tracking Nightly Rust
+
+     Aether pins a specific nightly toolchain in rust-toolchain.toml. Because
+     nightly Rust changes frequently, the pinned version needs to be advanced
+     periodically. This involves:
+
+     - Bumping the toolchain pin -- Update the `channel` field in
+       rust-toolchain.toml to a newer nightly date and fix any resulting
+       compilation errors caused by breaking changes in the language or
+       standard library.
+     - Addressing new Clippy lints -- New lints are introduced with nearly
+       every nightly release. The CI pipeline runs `cargo clippy -- -D
+       warnings`, so any new warnings must be resolved (either by fixing the
+       code or, where truly necessary, by adding a targeted #[allow(...)]
+       with an explanation).
+     - Adopting stabilized features -- When a feature that Aether uses via a
+       #![feature(...)] flag gets stabilized, the flag should be removed.
+     - Updating dependencies -- Keep crate dependencies up to date with
+       `cargo update` and verify the build still passes.
+
+
+GETTING STARTED
+---------------
+
+  1. Fork the repository and clone your fork locally.
+
+  2. Install prerequisites as described in README:
+       - Rust nightly toolchain (managed automatically via rust-toolchain.toml)
+       - xorriso
+       - qemu-system-x86_64
+
+  3. Build and run to verify your environment is working:
+       $ ./build/debug.sh
+       $ qemu-system-x86_64 -cdrom aether.iso -serial stdio
+
+
+DEVELOPMENT WORKFLOW
+--------------------
+
+  Check for lint errors:
+    $ cargo clippy -- -D warnings
+
+  Verify formatting:
+    $ cargo fmt --check
+
+  Apply formatting:
+    $ cargo fmt
+
+  Build a debug ISO:
+    $ ./build/debug.sh
+
+  Build a release ISO:
+    $ ./build/release.sh
+
+  Run in QEMU with serial output:
+    $ qemu-system-x86_64 -cdrom aether.iso -serial stdio
+
+  The CI pipeline (defined in .github/workflows/rust.yml) runs format checks,
+  Clippy, a release build, and a QEMU boot test on every push and pull
+  request. Your changes must pass all of these checks before they can be
+  merged.
+
+
+CODE STYLE
+----------
+
+  - Formatting: All code must be formatted with rustfmt. Run `cargo fmt`
+    before committing. The CI will reject unformatted code.
+  - Lints: All Clippy warnings are treated as errors in CI. Fix the warning
+    rather than suppressing it unless there is a specific, documented reason
+    not to.
+  - Unsafe code: Every `unsafe` block must have a comment explaining why it
+    is sound. Do not introduce new `unsafe` code without justification.
+  - Commit messages: Write clear, imperative commit messages.
+
+
+KEEPING UP WITH NIGHTLY RUST
+-----------------------------
+
+  To bump the toolchain pin:
+
+  1. Choose a newer nightly date (e.g., the current day's nightly).
+
+  2. Update the `channel` field in rust-toolchain.toml:
+       channel = "nightly-YYYY-MM-DD"
+
+  3. Run `cargo build` and `cargo clippy -- -D warnings`, then fix any errors.
+
+  4. Run `./build/release.sh` and verify the kernel still boots in QEMU.
+
+  5. Open a pull request with a title like:
+       chore: bump nightly to YYYY-MM-DD
+
+  Toolchain bump PRs are always welcome, even if they only contain the
+  version change and any mechanical fixes required to compile.
+
+
+SUBMITTING A PULL REQUEST
+--------------------------
+
+  1. Make your changes in a dedicated branch (not main).
+  2. Ensure `cargo fmt --check` and `cargo clippy -- -D warnings` both pass
+     locally.
+  3. Ensure the kernel builds and boots in QEMU without regression.
+  4. Open a pull request against main with a clear description of what
+     changed and why.
+  5. Link any relevant issue in the PR description.
+
+  Small, focused pull requests are easier to review and merge than large
+  ones. If you are planning a significant change, consider opening an issue
+  first to discuss the approach.
+
+
+REPORTING BUGS
+--------------
+
+  If you find a bug, please open an issue and include:
+
+  - A description of the unexpected behaviour.
+  - Steps to reproduce (build command, QEMU invocation, etc.).
+  - The serial log output if available.
+  - Your host OS, QEMU version, and the nightly toolchain date from
+    rust-toolchain.toml.
+
+
+LICENSE
+-------
+
+  Aether is licensed under the GNU General Public License v2.0 (GPL-2.0).
+  By contributing, you agree that your contributions will be licensed under
+  the same terms. See LICENSE for details.
