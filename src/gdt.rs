@@ -19,9 +19,15 @@ struct Selectors {
     /// Segment selector for the Task State Segment (TSS).
     tss: SegmentSelector,
     /// Segment selector for the 64-bit kernel code segment.
-    code: SegmentSelector,
+    kernel_code: SegmentSelector,
     /// Segment selector for the 64-bit kernel data segment.
-    data: SegmentSelector,
+    kernel_data: SegmentSelector,
+    /// Segment selector for the 64-bit user data segment.
+    #[allow(unused)]
+    user_data: SegmentSelector,
+    /// Segment selector for the 64-bit user code segment.
+    #[allow(unused)]
+    user_code: SegmentSelector,
 }
 
 lazy_static! {
@@ -34,10 +40,14 @@ lazy_static! {
         let mut gdt = GlobalDescriptorTable::new();
 
         let tss = gdt.append(Descriptor::tss_segment(&TASK_STATE_SEGMENT));
-        let code = gdt.append(Descriptor::kernel_code_segment());
-        let data = gdt.append(Descriptor::kernel_data_segment());
 
-        let selectors = Selectors { tss, code, data };
+        let kernel_code = gdt.append(Descriptor::kernel_code_segment());
+        let kernel_data = gdt.append(Descriptor::kernel_data_segment());
+
+        let user_data = gdt.append(Descriptor::user_data_segment());
+        let user_code = gdt.append(Descriptor::user_code_segment());
+
+        let selectors = Selectors { tss, kernel_code, kernel_data, user_data, user_code };
 
         (gdt, selectors)
     };
@@ -58,9 +68,9 @@ pub fn init() {
     gdt.load();
     unsafe {
         // Reload Code Segment (CS) register
-        CS::set_reg(selectors.code);
+        CS::set_reg(selectors.kernel_code);
         // Reload Stack Segment (SS) register
-        SS::set_reg(selectors.data);
+        SS::set_reg(selectors.kernel_data);
 
         // Load Task Register (TR) with TSS segment selector
         tables::load_tss(selectors.tss);
