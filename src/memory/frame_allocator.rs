@@ -42,12 +42,12 @@ unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
 }
 
 pub fn init() -> PhysFrameAllocator {
-    let Some(response) = MEMORY_MAP_REQUEST.response() else {
-        panic!("No memory map response");
-    };
+    let memory_map_response = MEMORY_MAP_REQUEST
+        .response()
+        .expect("Failed to receive memory map response from bootloader");
 
     PhysFrameAllocator {
-        entries: response.entries(),
+        entries: memory_map_response.entries(),
         current_entry: 0,
         current_addr: 0,
     }

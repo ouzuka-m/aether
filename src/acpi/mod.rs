@@ -10,7 +10,7 @@ pub mod pic;
 
 use crate::{
     address::ext::{PhysExt, VirtExt},
-    debug, error, info,
+    debug, info,
 };
 
 use self::handler::AcpiHandler;
@@ -39,10 +39,9 @@ static RSDP_REQUEST: RsdpRequest = RsdpRequest::new();
 pub fn init() {
     info!("Initializing ACPI subsystem...");
 
-    let Some(rsdp_response) = RSDP_REQUEST.response() else {
-        error!("Failed to receive RSDP response from bootloader");
-        panic!("failed to get RSDP response data");
-    };
+    let rsdp_response = RSDP_REQUEST
+        .response()
+        .expect("Failed to receive RSDP response from bootloader");
 
     // Get physical RSDP address
     let rsdp_address = VirtAddr::new(rsdp_response.address as u64).to_phys();
@@ -50,12 +49,12 @@ pub fn init() {
 
     let tables = unsafe {
         AcpiTables::from_rsdp(AcpiHandler, rsdp_address.as_usize())
-            .expect("failed to initialize ACPI tables")
+            .expect("Failed to get ACPI tables from RSDP")
     };
     debug!("ACPI tables parsed successfully from RSDP");
 
     let platform =
-        AcpiPlatform::new(tables, AcpiHandler).expect("failed to initialize ACPI platform");
+        AcpiPlatform::new(tables, AcpiHandler).expect("Failed to initialize ACPI platform");
     debug!("ACPI platform initialized");
 
     match platform.interrupt_model {
@@ -67,10 +66,10 @@ pub fn init() {
 
             lapic::enable(apic.local_apic_address);
 
-            let Some(ioapic) = apic.io_apics.first() else {
-                error!("No I/O APIC found in ACPI tables, cannot route IRQs");
-                panic!("IOAPIC not found, can't handle IRQs");
-            };
+            let ioapic = apic
+                .io_apics
+                .first()
+                .expect("No I/O APIC found in ACPI tables");
             let overrides = apic.interrupt_source_overrides.as_slice();
             let lapic_id = lapic::id();
 
@@ -81,8 +80,7 @@ pub fn init() {
             ioapic::init(ioapic, overrides, lapic_id);
         }
         _ => {
-            error!("Unsupported interrupt model (legacy 8259 PIC only)");
-            panic!("unknown interrupt model, no legacy support for I8259");
+            panic!("Unsupported interrupt model (legacy 8259 PIC only)");
         }
     };
 

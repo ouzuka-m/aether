@@ -16,9 +16,7 @@ lazy_static::lazy_static! {
     /// # Panics
     /// Panics if the bootloader fails to return a valid HHDM response.
     pub static ref HHDM: VirtAddr = {
-        let Some(hhdm_response) = HHDM_REQUEST.response() else {
-            panic!("failed to get HHDM response data");
-        };
+        let hhdm_response = HHDM_REQUEST.response().expect("Failed to receive HHDM response from bootloader");
 
         VirtAddr::new(hhdm_response.offset)
     };

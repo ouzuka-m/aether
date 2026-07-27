@@ -27,14 +27,14 @@ pub fn init(
     };
 
     for page in page_range {
-        let Some(frame) = frame_allocator.allocate_frame() else {
-            panic!("frame allocation failed")
-        };
+        let frame = frame_allocator
+            .allocate_frame()
+            .expect("Failed to allocate frame");
         let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
         unsafe {
             mapper
                 .map_to(page, frame, flags, frame_allocator)
-                .expect("failed to map page & frame")
+                .expect("Failed to map page & frame")
                 .flush();
         }
     }
