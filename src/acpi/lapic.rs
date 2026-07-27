@@ -26,22 +26,15 @@ const LAPIC_SVR_REG: u64 = 0xF0;
 /// Bit flag in SVR to enable the Local APIC.
 const SVR_APIC_ENABLE: u32 = 1 << 8;
 
-/// Represents a Local APIC instance storing its mapped virtual memory base address.
-#[derive(Debug, Clone, Copy)]
-pub struct LocalApic {
-    /// Virtual base address of MMIO registers for this Local APIC.
-    pub address: VirtAddr,
-}
-
-/// Global thread-safe singleton holding the initialized Local APIC instance.
-pub static LAPIC: Once<LocalApic> = Once::new();
+/// Global thread-safe singleton holding the initialized LAPIC virtual address.
+pub static LAPIC_ADDRESS: Once<VirtAddr> = Once::new();
 
 /// Enables the Local APIC at the given physical base address.
 ///
 /// Converts the physical address to a virtual address, writes to the Spurious
 /// Interrupt Vector Register (SVR at offset `0xF0`) to set the APIC enable bit
 /// and set the spurious interrupt vector index ([`SVR_IDX`]), and stores the
-/// global [`LAPIC`] singleton.
+/// global [`LAPIC_ADDRESS`] singleton.
 ///
 /// # Parameters
 /// - `lapic_address`: Physical address of the Local APIC base registers.
@@ -65,9 +58,7 @@ pub fn enable(lapic_address: u64) {
         ptr::write_volatile(svr, svr_value);
     }
 
-    LAPIC.call_once(|| LocalApic {
-        address: virt_address,
-    });
+    LAPIC_ADDRESS.call_once(|| virt_address);
 
     info!("Local APIC enabled (ID: {})", id());
 }
@@ -79,9 +70,8 @@ pub fn enable(lapic_address: u64) {
 /// equal priority interrupts to be delivered.
 pub fn eoi() {
     unsafe {
-        let ptr: *mut u32 = LAPIC
+        let ptr: *mut u32 = LAPIC_ADDRESS
             .get_unchecked()
-            .address
             .offset(LAPIC_EOI_REG)
             .as_mut_ptr();
 
@@ -98,7 +88,7 @@ pub fn eoi() {
 /// The APIC ID left-shifted by 24 bits as required by IOAPIC destination matching.
 pub fn id() -> u32 {
     unsafe {
-        let ptr: *const u32 = LAPIC.get_unchecked().address.offset(LAPIC_ID_REG).as_ptr();
+        let ptr: *const u32 = LAPIC_ADDRESS.get_unchecked().offset(LAPIC_ID_REG).as_ptr();
         let value = ptr::read_volatile(ptr);
         value << 24
     }
