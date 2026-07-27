@@ -91,7 +91,15 @@ fn panic(info: &PanicInfo) -> ! {
     x86_64::instructions::interrupts::disable();
 
     // Output formatted panic details to serial logger
-    error!("{}", info);
+    error!(
+        "{}\nLocation: {}",
+        info.message(),
+        if let Some(location) = info.location() {
+            location.file()
+        } else {
+            "unknown"
+        }
+    );
 
     isa_debug::exit_failure();
 
