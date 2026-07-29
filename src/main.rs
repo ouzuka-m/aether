@@ -92,7 +92,7 @@ fn panic(info: &PanicInfo) -> ! {
 
     // Output formatted panic details to serial logger
     error!(
-        "{}\nLocation: {}",
+        "{}\nLocation: {}\n\nKernel halted.",
         info.message(),
         if let Some(location) = info.location() {
             location.file()

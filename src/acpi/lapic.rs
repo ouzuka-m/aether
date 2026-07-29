@@ -47,18 +47,14 @@ pub fn enable(lapic_address: u64) {
         virt_address.as_u64()
     );
 
-    let svr: *mut u32 = virt_address.offset(LAPIC_SVR_REG).as_mut_ptr();
-
-    unsafe {
-        let mut svr_value = ptr::read_volatile(svr);
-
-        svr_value |= SVR_APIC_ENABLE;
-        svr_value |= SVR_IDX as u32;
-
-        ptr::write_volatile(svr, svr_value);
-    }
-
     LAPIC_ADDRESS.call_once(|| virt_address);
+
+    let mut svr_value = read_from_lapic(LAPIC_SVR_REG);
+
+    svr_value |= SVR_APIC_ENABLE;
+    svr_value |= SVR_IDX as u32;
+
+    write_to_lapic(LAPIC_SVR_REG, svr_value);
 
     info!("Local APIC enabled (ID: {})", id());
 }
@@ -69,14 +65,7 @@ pub fn enable(lapic_address: u64) {
 /// that processing of the current interrupt has finished, allowing higher or
 /// equal priority interrupts to be delivered.
 pub fn eoi() {
-    unsafe {
-        let ptr: *mut u32 = LAPIC_ADDRESS
-            .get_unchecked()
-            .offset(LAPIC_EOI_REG)
-            .as_mut_ptr();
-
-        ptr::write_volatile(ptr, 0);
-    }
+    write_to_lapic(LAPIC_EOI_REG, 0);
 }
 
 /// Reads the Local APIC ID of the current processor.
@@ -87,9 +76,22 @@ pub fn eoi() {
 /// # Returns
 /// The APIC ID left-shifted by 24 bits as required by IOAPIC destination matching.
 pub fn id() -> u32 {
+    let value = read_from_lapic(LAPIC_ID_REG);
+    value << 24
+}
+
+pub fn read_from_lapic(offset: u64) -> u32 {
+    unsafe { ptr::read_volatile(LAPIC_ADDRESS.get_unchecked().offset(offset).as_ptr::<u32>()) }
+}
+
+pub fn write_to_lapic(offset: u64, value: u32) {
     unsafe {
-        let ptr: *const u32 = LAPIC_ADDRESS.get_unchecked().offset(LAPIC_ID_REG).as_ptr();
-        let value = ptr::read_volatile(ptr);
-        value << 24
+        ptr::write_volatile(
+            LAPIC_ADDRESS
+                .get_unchecked()
+                .offset(offset)
+                .as_mut_ptr::<u32>(),
+            value,
+        );
     }
 }

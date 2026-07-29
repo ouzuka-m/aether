@@ -4,11 +4,16 @@
 //! hardware-level interrupts delivered via the APIC, such as spurious
 //! interrupts, APIC timer ticks, and PS/2 keyboard inputs.
 
+use core::sync::atomic::{AtomicU64, Ordering};
+
 use pc_keyboard::{DecodedKey, HandleControl, PS2Keyboard, ScancodeSet1, layouts::Us104Key};
 use spin::mutex::Mutex;
 use x86_64::{instructions::port::Port, structures::idt::InterruptStackFrame};
 
-use crate::{acpi::lapic, debug, warn};
+use crate::{
+    acpi::{lapic, lvt::timer},
+    debug, warn,
+};
 
 /// Interrupt vector index for Spurious Vector Interrupts (SVR).
 pub const SVR_IDX: u8 = 0xFF; // 255
@@ -26,6 +31,8 @@ lazy_static::lazy_static! {
     };
 }
 
+static TICK: AtomicU64 = AtomicU64::new(0);
+
 /// Spurious vector interrupt handler (Vector 255 / 0xFF).
 ///
 /// Spurious interrupts occur when an interrupt signal is dropped before the APIC
@@ -40,10 +47,13 @@ pub extern "x86-interrupt" fn spurious_vector_interrupt(_: InterruptStackFrame) 
 /// Triggered periodically by the APIC timer or PIT to drive OS scheduling
 /// and timekeeping tasks. Sends an EOI signal to the Local APIC upon completion.
 pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
-    debug!("Timer interrupt triggered");
+    let count = TICK.fetch_add(1, Ordering::Relaxed);
 
-    // RESERVED FOR FUTURE
+    if count.is_multiple_of(1000) {
+        debug!("Heartbeat: {} ticks", count);
+    }
 
+    timer::arm_tsc_deadline(1);
     lapic::eoi();
 }
 

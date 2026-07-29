@@ -4,11 +4,14 @@
 //! legacy 8259 PIC disabling, and Local/IO APIC initialization.
 
 pub mod handler;
+pub mod hpet;
 pub mod ioapic;
 pub mod lapic;
+pub mod lvt;
 pub mod pic;
 
 use crate::{
+    acpi::lvt::timer,
     address::ext::{PhysExt, VirtExt},
     debug, info,
 };
@@ -16,7 +19,7 @@ use crate::{
 use self::handler::AcpiHandler;
 
 use acpi::{
-    AcpiTables,
+    AcpiTables, HpetInfo,
     platform::{AcpiPlatform, InterruptModel},
 };
 use limine::request::RsdpRequest;
@@ -53,6 +56,10 @@ pub fn init() {
     };
     debug!("ACPI tables parsed successfully from RSDP");
 
+    let hpet = HpetInfo::new(&tables).expect("Failed to get HPET info from ACPI tables");
+    hpet::init(&hpet);
+    debug!("HPET initialized");
+
     let platform =
         AcpiPlatform::new(tables, AcpiHandler).expect("Failed to initialize ACPI platform");
     debug!("ACPI platform initialized");
@@ -65,6 +72,8 @@ pub fn init() {
             pic::disable();
 
             lapic::enable(apic.local_apic_address);
+
+            timer::init();
 
             let ioapic = apic
                 .io_apics
