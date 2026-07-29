@@ -27,7 +27,12 @@ pub trait VirtExt {
 
 impl PhysExt for PhysAddr {
     fn to_virt(self) -> VirtAddr {
-        VirtAddr::new((*HHDM).as_u64() + self.as_u64())
+        let addr = (*HHDM)
+            .as_u64()
+            .checked_add(self.as_u64())
+            .expect("Conversion to virtual address causes overflow");
+
+        VirtAddr::new(addr)
     }
 
     fn as_usize(&self) -> usize {
@@ -37,7 +42,12 @@ impl PhysExt for PhysAddr {
 
 impl VirtExt for VirtAddr {
     fn to_phys(self) -> PhysAddr {
-        PhysAddr::new(self.as_u64() - (*HHDM).as_u64())
+        let addr = self
+            .as_u64()
+            .checked_sub((*HHDM).as_u64())
+            .expect("Conversion to physical address causes underflow");
+
+        PhysAddr::new(addr)
     }
 
     fn offset(&self, offset: u64) -> VirtAddr {
