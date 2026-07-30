@@ -10,6 +10,16 @@ use x86_64::PhysAddr;
 
 use crate::{address::ext::PhysExt, debug};
 
+macro_rules! stub_handler {
+    ($($fn_name:ident ($($_:ident : $ty:ty),*) $(-> $ret:ty)? ;)*) => {
+        $(
+            fn $fn_name(&self, $(_: $ty),*) $(-> $ret)? {
+                unimplemented!()
+            }
+        )*
+    };
+}
+
 /// Kernel implementation of the `acpi::Handler` trait.
 ///
 /// Responsible for translating physical memory addresses to virtual addresses
@@ -57,101 +67,39 @@ impl Handler for AcpiHandler {
         );
     }
 
-    fn read_u8(&self, _: usize) -> u8 {
-        unimplemented!()
+    stub_handler! {
+        read_u8(address: usize) -> u8;
+        read_u16(address: usize) -> u16;
+        read_u32(address: usize) -> u32;
+        read_u64(address: usize) -> u64;
+
+        write_u8(address: usize, value: u8);
+        write_u16(address: usize, value: u16);
+        write_u32(address: usize, value: u32);
+        write_u64(address: usize, value: u64);
+
+        read_io_u8(port: u16) -> u8;
+        read_io_u16(port: u16) -> u16;
+        read_io_u32(port: u16) -> u32;
+
+        write_io_u8(port: u16, value: u8);
+        write_io_u16(port: u16, value: u16);
+        write_io_u32(port: u16, value: u32);
+
+        read_pci_u8(address: PciAddress, offset: u16) -> u8;
+        read_pci_u16(address: PciAddress, offset: u16) -> u16;
+        read_pci_u32(address: PciAddress, offset: u16) -> u32;
+
+        write_pci_u8(address: PciAddress, offset: u16, value: u8);
+        write_pci_u16(address: PciAddress, offset: u16, value: u16);
+        write_pci_u32(address: PciAddress, offset: u16, value: u32);
+
+        nanos_since_boot() -> u64;
+        stall(microseconds: u64);
+        sleep(microseconds: u64);
+
+        create_mutex() -> Handle;
+        acquire(mutex: Handle, timeout: u16) -> Result<(), AmlError>;
+        release(mutex: Handle);
     }
-
-    fn read_u16(&self, _: usize) -> u16 {
-        unimplemented!()
-    }
-
-    fn read_u32(&self, _: usize) -> u32 {
-        unimplemented!()
-    }
-
-    fn read_u64(&self, _: usize) -> u64 {
-        unimplemented!()
-    }
-
-    fn write_u8(&self, _: usize, _: u8) {
-        unimplemented!()
-    }
-
-    fn write_u16(&self, _: usize, _: u16) {
-        unimplemented!()
-    }
-
-    fn write_u32(&self, _: usize, _: u32) {
-        unimplemented!()
-    }
-
-    fn write_u64(&self, _: usize, _: u64) {
-        unimplemented!()
-    }
-
-    fn read_io_u8(&self, _: u16) -> u8 {
-        unimplemented!()
-    }
-
-    fn read_io_u16(&self, _: u16) -> u16 {
-        unimplemented!()
-    }
-
-    fn read_io_u32(&self, _: u16) -> u32 {
-        unimplemented!()
-    }
-
-    fn write_io_u8(&self, _: u16, _: u8) {
-        unimplemented!()
-    }
-
-    fn write_io_u16(&self, _: u16, _: u16) {
-        unimplemented!()
-    }
-
-    fn write_io_u32(&self, _: u16, _: u32) {
-        unimplemented!()
-    }
-
-    fn read_pci_u8(&self, _: PciAddress, _: u16) -> u8 {
-        unimplemented!()
-    }
-
-    fn read_pci_u16(&self, _: PciAddress, _: u16) -> u16 {
-        unimplemented!()
-    }
-
-    fn read_pci_u32(&self, _: PciAddress, _: u16) -> u32 {
-        unimplemented!()
-    }
-
-    fn write_pci_u8(&self, _: PciAddress, _: u16, _: u8) {
-        unimplemented!()
-    }
-
-    fn write_pci_u16(&self, _: PciAddress, _: u16, _: u16) {
-        unimplemented!()
-    }
-
-    fn write_pci_u32(&self, _: PciAddress, _: u16, _: u32) {
-        unimplemented!()
-    }
-
-    fn nanos_since_boot(&self) -> u64 {
-        unimplemented!()
-    }
-
-    fn stall(&self, _: u64) {}
-
-    fn sleep(&self, _: u64) {}
-
-    fn create_mutex(&self) -> Handle {
-        unimplemented!()
-    }
-
-    fn acquire(&self, _: Handle, _: u16) -> Result<(), AmlError> {
-        unimplemented!()
-    }
-
-    fn release(&self, _: Handle) {}
 }
