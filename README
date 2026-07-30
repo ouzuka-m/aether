@@ -48,10 +48,10 @@ RUNNING WITH QEMU
   following commands:
 
   Standard Execution:
-    $ qemu-system-x86_64 -cdrom aether.iso
+    $ qemu-system-x86_64 -cdrom aether.iso -cpu host -enable-kvm
 
   With Serial Output to Terminal:
-    $ qemu-system-x86_64 -cdrom aether.iso -serial stdio
+    $ qemu-system-x86_64 -cdrom aether.iso -cpu host -enable-kvm -serial stdio
 
 DIRECTORY LAYOUT
 -----------------
