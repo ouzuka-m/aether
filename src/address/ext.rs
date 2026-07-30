@@ -10,7 +10,7 @@ use crate::address::hhdm::HHDM;
 /// Extension trait for physical memory addresses ([`PhysAddr`]).
 pub trait PhysExt {
     /// Translates a physical address to its corresponding higher-half virtual address.
-    fn to_virt(self) -> VirtAddr;
+    fn to_virt(&self) -> VirtAddr;
 
     /// Returns the physical address value as a `usize`.
     fn as_usize(&self) -> usize;
@@ -19,14 +19,14 @@ pub trait PhysExt {
 /// Extension trait for virtual memory addresses ([`VirtAddr`]).
 pub trait VirtExt {
     /// Translates a higher-half virtual address back to its physical address.
-    fn to_phys(self) -> PhysAddr;
+    fn to_phys(&self) -> PhysAddr;
 
     /// Returns a new virtual address offset by `offset` bytes.
     fn offset(&self, offset: u64) -> VirtAddr;
 }
 
 impl PhysExt for PhysAddr {
-    fn to_virt(self) -> VirtAddr {
+    fn to_virt(&self) -> VirtAddr {
         let addr = (*HHDM)
             .as_u64()
             .checked_add(self.as_u64())
@@ -41,7 +41,7 @@ impl PhysExt for PhysAddr {
 }
 
 impl VirtExt for VirtAddr {
-    fn to_phys(self) -> PhysAddr {
+    fn to_phys(&self) -> PhysAddr {
         let addr = self
             .as_u64()
             .checked_sub((*HHDM).as_u64())
