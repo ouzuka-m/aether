@@ -27,7 +27,7 @@ const LAPIC_SVR_REG: u64 = 0xF0;
 const SVR_APIC_ENABLE: u32 = 1 << 8;
 
 /// Global thread-safe singleton holding the initialized LAPIC virtual address.
-pub static LAPIC_ADDRESS: Once<VirtAddr> = Once::new();
+static LAPIC_BASE: Once<VirtAddr> = Once::new();
 
 /// Enables the Local APIC at the given physical base address.
 ///
@@ -38,16 +38,15 @@ pub static LAPIC_ADDRESS: Once<VirtAddr> = Once::new();
 ///
 /// # Parameters
 /// - `lapic_address`: Physical address of the Local APIC base registers.
-pub fn enable(lapic_address: u64) {
-    let virt_address = PhysAddr::new(lapic_address).to_virt();
+pub fn enable(lapic_phys_address: u64) {
+    let lapic_base = PhysAddr::new(lapic_phys_address).to_virt();
 
     debug!(
         "Enabling Local APIC (Phys: {:#x}, Virt: {:#x})",
-        lapic_address,
-        virt_address.as_u64()
+        lapic_phys_address, lapic_base
     );
 
-    LAPIC_ADDRESS.call_once(|| virt_address);
+    LAPIC_BASE.call_once(|| lapic_base);
 
     let mut svr_value = read_from_lapic(LAPIC_SVR_REG);
 
@@ -81,17 +80,17 @@ pub fn id() -> u32 {
 }
 
 pub fn read_from_lapic(offset: u64) -> u32 {
-    unsafe { ptr::read_volatile(LAPIC_ADDRESS.get_unchecked().offset(offset).as_ptr::<u32>()) }
+    let lapic_base = lapic_base();
+    unsafe { ptr::read_volatile(lapic_base.offset(offset).as_ptr::<u32>()) }
 }
 
 pub fn write_to_lapic(offset: u64, value: u32) {
+    let lapic_base = lapic_base();
     unsafe {
-        ptr::write_volatile(
-            LAPIC_ADDRESS
-                .get_unchecked()
-                .offset(offset)
-                .as_mut_ptr::<u32>(),
-            value,
-        );
+        ptr::write_volatile(lapic_base.offset(offset).as_mut_ptr::<u32>(), value);
     }
+}
+
+fn lapic_base() -> VirtAddr {
+    *LAPIC_BASE.get().expect("LAPIC hasn't been initialized")
 }

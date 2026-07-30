@@ -6,6 +6,7 @@
 
 use acpi::platform::interrupt::{InterruptSourceOverride, IoApic};
 use core::ptr;
+use spin::once::Once;
 use x86_64::{PhysAddr, VirtAddr};
 
 use crate::{address::ext::PhysExt, debug, info};
@@ -27,6 +28,8 @@ const KEYBOARD_ISA: u8 = 1;
 /// IDT vector for keyboard interrupt (Vector 33 / 0x21).
 const KEYBOARD_GSI_INFO: u32 = 0x00000021;
 
+static IOAPIC_BASE: Once<VirtAddr> = Once::new();
+
 /// Initializes the I/O APIC by configuring Redirection Table entries.
 ///
 /// Maps legacy ISA interrupts (Timer IRQ 0 and Keyboard IRQ 1) to their
@@ -40,9 +43,11 @@ const KEYBOARD_GSI_INFO: u32 = 0x00000021;
 pub fn init(ioapic: &IoApic, overrides: &[InterruptSourceOverride], lapic_id: u32) {
     let ioapic_base = PhysAddr::new(ioapic.address as u64).to_virt();
 
-    let id = ((read_from_ioapic(ioapic_base, IOAPICID) >> 24) & 0xFF) as u8;
+    IOAPIC_BASE.call_once(|| ioapic_base);
+
+    let id = ((read_from_ioapic(IOAPICID) >> 24) & 0xFF) as u8;
     let (max_irqs, version) = {
-        let value = read_from_ioapic(ioapic_base, IOAPICVER);
+        let value = read_from_ioapic(IOAPICVER);
 
         ((value >> 16) as u8, value as u8)
     };
@@ -55,48 +60,50 @@ pub fn init(ioapic: &IoApic, overrides: &[InterruptSourceOverride], lapic_id: u3
     );
 
     let keyboard_gsi = isa_to_gsi(KEYBOARD_ISA, overrides);
-    let base_reg = IOREDTBL_BASE + keyboard_gsi * 2;
+    let low = IOREDTBL_BASE + keyboard_gsi * 2;
+    let high = low + 1;
 
     debug!(
         "Mapping Keyboard IRQ (ISA {}) -> GSI {} (Vector {:#x})",
         KEYBOARD_ISA, keyboard_gsi, KEYBOARD_GSI_INFO
     );
-    map_redtbl(ioapic_base, base_reg, KEYBOARD_GSI_INFO, lapic_id);
+    map_redtbl(low, high, KEYBOARD_GSI_INFO, lapic_id);
 }
 
-/// Reads a 32-bit register value from the I/O APIC.
+/// Reads a 32-bit register value from te I/O APIC.
 ///
 /// Writes the register index to `IOREGSEL` and reads the data from `IOWIN`.
-fn read_from_ioapic(ioapic_base: VirtAddr, reg: u32) -> u32 {
-    let sel: *mut u32 = (ioapic_base + IOREGSEL).as_mut_ptr();
-    let win: *const u32 = (ioapic_base + IOWIN).as_ptr();
+pub fn read_from_ioapic(ioregsel_idx: u32) -> u32 {
+    let ioapic_base = ioapic_base();
+
+    let ioregsel: *mut u32 = (ioapic_base + IOREGSEL).as_mut_ptr();
+    let iowin: *const u32 = (ioapic_base + IOWIN).as_ptr();
 
     unsafe {
-        ptr::write_volatile(sel, reg);
-        ptr::read_volatile(win)
+        ptr::write_volatile(ioregsel, ioregsel_idx);
+        ptr::read_volatile(iowin)
     }
 }
 
 /// Writes a 32-bit value to an I/O APIC register.
 ///
 /// Writes the register index to `IOREGSEL` followed by the value to `IOWIN`.
-fn write_to_ioapic(ioapic_base: VirtAddr, reg: u32, value: u32) {
-    let sel: *mut u32 = (ioapic_base + IOREGSEL).as_mut_ptr();
-    let win: *mut u32 = (ioapic_base + IOWIN).as_mut_ptr();
+pub fn write_to_ioapic(ioregsel_idx: u32, iowin_val: u32) {
+    let ioapic_base = ioapic_base();
+
+    let ioregsel: *mut u32 = (ioapic_base + IOREGSEL).as_mut_ptr();
+    let iowin: *mut u32 = (ioapic_base + IOWIN).as_mut_ptr();
 
     unsafe {
-        ptr::write_volatile(sel, reg);
-        ptr::write_volatile(win, value);
+        ptr::write_volatile(ioregsel, ioregsel_idx);
+        ptr::write_volatile(iowin, iowin_val);
     }
 }
 
 /// Configures a 64-bit Redirection Table entry (IOREDTBL) for an IRQ pin.
-///
-/// Write the destination field (`dst`) to the high 32-bit register (`base_reg + 1`),
-/// and vector / delivery mode flags (`gsi_info`) to the low 32-bit register (`base_reg`).
-fn map_redtbl(ioapic_base: VirtAddr, base_reg: u32, gsi_info: u32, dst: u32) {
-    write_to_ioapic(ioapic_base, base_reg + 1, dst);
-    write_to_ioapic(ioapic_base, base_reg, gsi_info);
+fn map_redtbl(low: u32, high: u32, gsi_info: u32, dst: u32) {
+    write_to_ioapic(high, dst);
+    write_to_ioapic(low, gsi_info);
 }
 
 /// Resolves an ISA IRQ line number to its corresponding Global System Interrupt (GSI).
@@ -109,4 +116,10 @@ fn isa_to_gsi(isa_irq: u8, overrides: &[InterruptSourceOverride]) -> u32 {
         .find(|o| o.isa_source == isa_irq)
         .map(|o| o.global_system_interrupt)
         .unwrap_or(isa_irq as u32)
+}
+
+fn ioapic_base() -> VirtAddr {
+    *IOAPIC_BASE
+        .get()
+        .expect("IOAPIC address hasn't been initialized")
 }
