@@ -8,7 +8,7 @@ use x86_64::{
 static ALLOCATOR: LockedHeap<33> = LockedHeap::empty();
 
 pub const HEAP_START: usize = 0xFFFF_9000_0000_0000;
-pub const HEAP_SIZE: usize = 1000 * 1024; // 1 MB, 250 pages
+pub const HEAP_SIZE: usize = 1024 * 1024; // 1 MB, 256 pages
 
 pub fn init(
     mapper: &mut impl Mapper<Size4KiB>,
@@ -17,7 +17,7 @@ pub fn init(
     let page_range = {
         let start = VirtAddr::new(HEAP_START as u64);
 
-        // Subtract 1 to prevent use of page 251
+        // Subtract 1 to prevent use of page 257
         let end = start + HEAP_SIZE as u64 - 1u64;
 
         let start_page: Page<Size4KiB> = Page::containing_address(start);
