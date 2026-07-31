@@ -9,7 +9,7 @@ use core::ptr;
 use spin::once::Once;
 use x86_64::{PhysAddr, VirtAddr};
 
-use crate::{acpi::lapic, address::ext::PhysExt, debug, info};
+use crate::{acpi::lapic, address::ext::PhysExt, debug, info, interrupts::handlers::KEYBOARD_IDX};
 
 /// Register Select offset relative to I/O APIC MMIO base.
 const IOREGSEL: u64 = 0x00;
@@ -25,20 +25,12 @@ const IOREDTBL_BASE: u32 = 0x10;
 
 /// ISA IRQ line for PS/2 Keyboard.
 const KEYBOARD_ISA: u8 = 1;
-/// IDT vector for keyboard interrupt (Vector 33 / 0x21).
-const KEYBOARD_GSI_INFO: u32 = 0x00000021;
+
+const KEYBOARD_GSI_INFO: u32 = KEYBOARD_IDX as u32;
 
 static IOAPIC_BASE: Once<VirtAddr> = Once::new();
 
 /// Initializes the I/O APIC by configuring Redirection Table entries.
-///
-/// Maps legacy ISA interrupts (Timer IRQ 0 and Keyboard IRQ 1) to their
-/// respective Global System Interrupt (GSI) pins based on ACPI interrupt source
-/// overrides, and routes them to the designated Local APIC destination ID.
-///
-/// # Parameters
-/// - `ioapic`: Reference to the ACPI platform `IoApic` structure.
-/// - `overrides`: Slice of ACPI `InterruptSourceOverride` entries.
 pub fn init(ioapic: &IoApic, overrides: &[InterruptSourceOverride]) {
     let ioapic_base = PhysAddr::new(ioapic.address as u64).to_virt();
 
