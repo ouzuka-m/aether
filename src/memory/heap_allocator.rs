@@ -30,7 +30,7 @@ pub fn init(
         let frame = frame_allocator
             .allocate_frame()
             .expect("Failed to allocate frame");
-        let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
+        let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE | PageTableFlags::NO_EXECUTE;
         unsafe {
             mapper
                 .map_to(page, frame, flags, frame_allocator)
