@@ -73,10 +73,10 @@ pub fn eoi() {
 /// it appropriately.
 ///
 /// # Returns
-/// The APIC ID left-shifted by 24 bits as required by IOAPIC destination matching.
-pub fn id() -> u32 {
+/// The APIC ID right-shifted by 24 bits as required by IOAPIC destination matching.
+pub fn id() -> u8 {
     let value = read_from_lapic(LAPIC_ID_REG);
-    value << 24
+    (value >> 24) as u8
 }
 
 pub fn read_from_lapic(offset: u64) -> u32 {

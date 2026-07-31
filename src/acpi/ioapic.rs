@@ -9,7 +9,7 @@ use core::ptr;
 use spin::once::Once;
 use x86_64::{PhysAddr, VirtAddr};
 
-use crate::{address::ext::PhysExt, debug, info};
+use crate::{acpi::lapic, address::ext::PhysExt, debug, info};
 
 /// Register Select offset relative to I/O APIC MMIO base.
 const IOREGSEL: u64 = 0x00;
@@ -39,8 +39,7 @@ static IOAPIC_BASE: Once<VirtAddr> = Once::new();
 /// # Parameters
 /// - `ioapic`: Reference to the ACPI platform `IoApic` structure.
 /// - `overrides`: Slice of ACPI `InterruptSourceOverride` entries.
-/// - `lapic_id`: Destination Local APIC ID (shifted by 24 bits).
-pub fn init(ioapic: &IoApic, overrides: &[InterruptSourceOverride], lapic_id: u32) {
+pub fn init(ioapic: &IoApic, overrides: &[InterruptSourceOverride]) {
     let ioapic_base = PhysAddr::new(ioapic.address as u64).to_virt();
 
     IOAPIC_BASE.call_once(|| ioapic_base);
@@ -59,6 +58,8 @@ pub fn init(ioapic: &IoApic, overrides: &[InterruptSourceOverride], lapic_id: u3
         max_irqs + 1
     );
 
+    let lapic_id = lapic::id();
+
     let keyboard_gsi = isa_to_gsi(KEYBOARD_ISA, overrides);
     let low = IOREDTBL_BASE + keyboard_gsi * 2;
     let high = low + 1;
@@ -67,7 +68,7 @@ pub fn init(ioapic: &IoApic, overrides: &[InterruptSourceOverride], lapic_id: u3
         "Mapping Keyboard IRQ (ISA {}) -> GSI {} (Vector {:#x})",
         KEYBOARD_ISA, keyboard_gsi, KEYBOARD_GSI_INFO
     );
-    map_redtbl(low, high, KEYBOARD_GSI_INFO, lapic_id);
+    map_redtbl(low, high, KEYBOARD_GSI_INFO, lapic_id as u32);
 }
 
 /// Reads a 32-bit register value from te I/O APIC.

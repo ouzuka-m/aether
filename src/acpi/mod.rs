@@ -80,13 +80,12 @@ pub fn init() {
                 .first()
                 .expect("No I/O APIC found in ACPI tables");
             let overrides = apic.interrupt_source_overrides.as_slice();
-            let lapic_id = lapic::id();
 
             debug!(
-                "Initializing I/O APIC at physical address {:#x} for Local APIC ID {}",
-                ioapic.address, lapic_id
+                "Initializing I/O APIC at physical address {:#x}",
+                ioapic.address
             );
-            ioapic::init(ioapic, overrides, lapic_id);
+            ioapic::init(ioapic, overrides);
         }
         _ => {
             panic!("Unsupported interrupt model (legacy 8259 PIC only)");
