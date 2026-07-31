@@ -32,7 +32,7 @@ pub fn init(hpet: &HpetInfo) {
 pub fn wait_ns(ns: u64) {
     let period_fs = period_fs();
 
-    let ticks = (ns * 1_000_000) / period_fs;
+    let ticks = ns.checked_mul(1_000_000).expect("wait_ns overflow") / period_fs;
     let target = read_counter() + ticks;
     while read_counter() < target {
         core::hint::spin_loop();
