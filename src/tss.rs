@@ -7,15 +7,7 @@
 use lazy_static::lazy_static;
 use x86_64::{VirtAddr, structures::tss::TaskStateSegment};
 
-use crate::stacks;
-
-/// Internal wrapper representing a 16-byte aligned stack memory buffer.
-#[repr(C, align(16))]
-struct Stack([u8; stacks::STACK_SIZE]);
-
-static DF_STACK: Stack = Stack([0; stacks::STACK_SIZE]);
-static NMI_STACK: Stack = Stack([0; stacks::STACK_SIZE]);
-static MCE_STACK: Stack = Stack([0; stacks::STACK_SIZE]);
+use crate::stacks::{self, Stack};
 
 lazy_static! {
     /// Global lazy-initialized Task State Segment (TSS).
@@ -27,15 +19,14 @@ lazy_static! {
     pub static ref TASK_STATE_SEGMENT: TaskStateSegment = {
         let mut tss = TaskStateSegment::new();
 
-        tss.interrupt_stack_table[stacks::DF_INDEX as usize] =
-            VirtAddr::from_ptr(&raw const DF_STACK) + stacks::STACK_SIZE as u64;
-
-        tss.interrupt_stack_table[stacks::NMI_INDEX as usize] =
-            VirtAddr::from_ptr(&raw const NMI_STACK) + stacks::STACK_SIZE as u64;
-
-        tss.interrupt_stack_table[stacks::MCE_INDEX as usize] =
-            VirtAddr::from_ptr(&raw const MCE_STACK) + stacks::STACK_SIZE as u64;
+        tss.interrupt_stack_table[stacks::DF_INDEX as usize] = stack_end(&raw const stacks::DF_STACK);
+        tss.interrupt_stack_table[stacks::NMI_INDEX as usize] = stack_end(&raw const stacks::NMI_STACK);
+        tss.interrupt_stack_table[stacks::MCE_INDEX as usize] = stack_end(&raw const stacks::MCE_STACK);
 
         tss
     };
+}
+
+fn stack_end(stack_ptr: *const Stack) -> VirtAddr {
+    VirtAddr::from_ptr(stack_ptr) + stacks::STACK_SIZE as u64
 }

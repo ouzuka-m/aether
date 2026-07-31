@@ -6,6 +6,14 @@
 /// Size of each dedicated exception stack in bytes (32 KiB).
 pub const STACK_SIZE: usize = 4096 * 8; // 32 KiB
 
+/// Internal wrapper representing a 16-byte aligned stack memory buffer.
+#[repr(C, align(16))]
+pub struct Stack([u8; STACK_SIZE]);
+
+pub static DF_STACK: Stack = Stack([0; STACK_SIZE]);
+pub static NMI_STACK: Stack = Stack([0; STACK_SIZE]);
+pub static MCE_STACK: Stack = Stack([0; STACK_SIZE]);
+
 /// IST index for the Double Fault (#DF) exception stack.
 pub const DF_INDEX: u16 = 0;
 
