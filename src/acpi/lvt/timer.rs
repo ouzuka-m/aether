@@ -40,7 +40,8 @@ pub fn arm_tsc_deadline(ms: u64) {
     let now = unsafe { core::arch::x86_64::_rdtsc() };
     let ticks_per_ms = ticks_per_ms();
 
-    let deadline = now.saturating_add(ticks_per_ms.saturating_mul(ms));
+    let delta = ticks_per_ms.checked_mul(ms).expect("TSC delay overflow");
+    let deadline = now.checked_add(delta).expect("TSC deadline overflow");
 
     wrmsr(deadline);
 }
