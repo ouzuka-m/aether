@@ -91,15 +91,17 @@ fn panic(info: &PanicInfo) -> ! {
     x86_64::instructions::interrupts::disable();
 
     // Output formatted panic details to serial logger
-    error!(
-        "{}\nLocation: {}\n\nKernel halted.",
-        info.message(),
-        if let Some(location) = info.location() {
-            location.file()
-        } else {
-            "unknown"
-        }
-    );
+    if let Some(location) = info.location() {
+        error!(
+            "{}\nLocation: {}:{}:{}\n\nKernel halted.",
+            info.message(),
+            location.file(),
+            location.line(),
+            location.column()
+        );
+    } else {
+        error!("{}\n\nKernel halted.", info.message(),);
+    }
 
     isa_debug::exit_failure();
 
