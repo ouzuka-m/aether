@@ -13,6 +13,10 @@ use crate::stacks;
 #[repr(C, align(16))]
 struct Stack([u8; stacks::STACK_SIZE]);
 
+static DF_STACK: Stack = Stack([0; stacks::STACK_SIZE]);
+static NMI_STACK: Stack = Stack([0; stacks::STACK_SIZE]);
+static MCE_STACK: Stack = Stack([0; stacks::STACK_SIZE]);
+
 lazy_static! {
     /// Global lazy-initialized Task State Segment (TSS).
     ///
@@ -23,21 +27,15 @@ lazy_static! {
     pub static ref TASK_STATE_SEGMENT: TaskStateSegment = {
         let mut tss = TaskStateSegment::new();
 
-        tss.interrupt_stack_table[stacks::DF_INDEX as usize] = create_stack();
-        tss.interrupt_stack_table[stacks::NMI_INDEX as usize] = create_stack();
-        tss.interrupt_stack_table[stacks::MCE_INDEX as usize] = create_stack();
+        tss.interrupt_stack_table[stacks::DF_INDEX as usize] =
+            VirtAddr::from_ptr(&raw const DF_STACK) + stacks::STACK_SIZE as u64;
+
+        tss.interrupt_stack_table[stacks::NMI_INDEX as usize] =
+            VirtAddr::from_ptr(&raw const NMI_STACK) + stacks::STACK_SIZE as u64;
+
+        tss.interrupt_stack_table[stacks::MCE_INDEX as usize] =
+            VirtAddr::from_ptr(&raw const MCE_STACK) + stacks::STACK_SIZE as u64;
 
         tss
     };
-}
-
-/// Helper function to create a dedicated stack buffer and return its top virtual address.
-///
-/// Hardware stacks grow downwards from higher addresses to lower addresses on x86_64,
-/// so the top address of the stack buffer (`stack_start + STACK_SIZE`) is returned.
-fn create_stack() -> VirtAddr {
-    static STACK: Stack = Stack([0; stacks::STACK_SIZE]);
-
-    let stack_start = VirtAddr::from_ptr(&raw const STACK);
-    stack_start + stacks::STACK_SIZE as u64
 }
