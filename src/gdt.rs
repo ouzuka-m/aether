@@ -5,7 +5,7 @@
 //! valid code and data segment descriptors as well as a Task State Segment (TSS) descriptor
 //! must still be present in the GDT.
 
-use lazy_static::lazy_static;
+use spin::lazylock::LazyLock;
 use x86_64::{
     instructions::tables,
     registers::segmentation::{CS, SS, Segment},
@@ -30,28 +30,28 @@ struct Selectors {
     user_code: SegmentSelector,
 }
 
-lazy_static! {
-    /// Static lazy initialization of the GDT and its associated segment selectors.
-    ///
-    /// Constructs a new [`GlobalDescriptorTable`], appends entries for the kernel TSS,
-    /// kernel code segment, and kernel data segment, and returns a tuple containing
-    /// the table and selector structure.
-    static ref PAIR: (GlobalDescriptorTable, Selectors) = {
-        let mut gdt = GlobalDescriptorTable::new();
+/// Static lazy initialization of the GDT and its associated segment selectors.
+static PAIR: LazyLock<(GlobalDescriptorTable, Selectors)> = LazyLock::new(|| {
+    let mut gdt = GlobalDescriptorTable::new();
 
-        let tss = gdt.append(Descriptor::tss_segment(&TASK_STATE_SEGMENT));
+    let tss = gdt.append(Descriptor::tss_segment(&TASK_STATE_SEGMENT));
 
-        let kernel_code = gdt.append(Descriptor::kernel_code_segment());
-        let kernel_data = gdt.append(Descriptor::kernel_data_segment());
+    let kernel_code = gdt.append(Descriptor::kernel_code_segment());
+    let kernel_data = gdt.append(Descriptor::kernel_data_segment());
 
-        let user_data = gdt.append(Descriptor::user_data_segment());
-        let user_code = gdt.append(Descriptor::user_code_segment());
+    let user_data = gdt.append(Descriptor::user_data_segment());
+    let user_code = gdt.append(Descriptor::user_code_segment());
 
-        let selectors = Selectors { tss, kernel_code, kernel_data, user_data, user_code };
-
-        (gdt, selectors)
+    let selectors = Selectors {
+        tss,
+        kernel_code,
+        kernel_data,
+        user_data,
+        user_code,
     };
-}
+
+    (gdt, selectors)
+});
 
 /// Initializes and loads the Global Descriptor Table (GDT) and Task State Segment (TSS).
 ///

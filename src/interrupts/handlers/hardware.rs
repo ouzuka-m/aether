@@ -7,7 +7,7 @@
 use core::sync::atomic::{AtomicU64, Ordering};
 
 use pc_keyboard::{DecodedKey, HandleControl, PS2Keyboard, ScancodeSet1, layouts::Us104Key};
-use spin::mutex::Mutex;
+use spin::{lazylock::LazyLock, mutex::Mutex};
 use x86_64::{instructions::port::Port, structures::idt::InterruptStackFrame};
 
 use crate::{
@@ -24,12 +24,14 @@ pub const TIMER_IDX: u8 = 0x20; // 32
 /// Interrupt vector index for PS/2 Keyboard interrupts.
 pub const KEYBOARD_IDX: u8 = 0x21; // 33
 
-lazy_static::lazy_static! {
-    /// Thread-safe PS/2 keyboard driver instance.
-    static ref KEYBOARD: Mutex<PS2Keyboard<Us104Key, ScancodeSet1>> = {
-        Mutex::new(PS2Keyboard::new(ScancodeSet1::new(), Us104Key, HandleControl::Ignore))
-    };
-}
+/// Thread-safe PS/2 keyboard driver instance.
+static KEYBOARD: LazyLock<Mutex<PS2Keyboard<Us104Key, ScancodeSet1>>> = LazyLock::new(|| {
+    Mutex::new(PS2Keyboard::new(
+        ScancodeSet1::new(),
+        Us104Key,
+        HandleControl::Ignore,
+    ))
+});
 
 static TICK: AtomicU64 = AtomicU64::new(0);
 
