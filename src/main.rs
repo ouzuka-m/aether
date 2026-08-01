@@ -22,7 +22,7 @@ mod stacks;
 mod tss;
 
 use core::panic::PanicInfo;
-use x86_64::instructions::{self};
+use x86_64::instructions;
 
 use interrupts::idt;
 use memory::{frame_allocator, heap_allocator, mapper};
@@ -43,7 +43,7 @@ use memory::{frame_allocator, heap_allocator, mapper};
 #[unsafe(no_mangle)]
 extern "C" fn _start() -> ! {
     // Step 1: Disable CPU hardware interrupts during critical boot sequence
-    x86_64::instructions::interrupts::disable();
+    instructions::interrupts::disable();
 
     info!("Aether Kernel starting...");
 
@@ -70,7 +70,7 @@ extern "C" fn _start() -> ! {
     // Step 7: Enable CPU interrupts and enter low-power idle loop
     loop {
         // Re-enable interrupts and halt CPU until next hardware interrupt arrives
-        x86_64::instructions::interrupts::enable_and_hlt();
+        instructions::interrupts::enable_and_hlt();
     }
 }
 
@@ -88,7 +88,7 @@ extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     // Disable interrupts to prevent further interrupt processing during a fatal panic
-    x86_64::instructions::interrupts::disable();
+    instructions::interrupts::disable();
 
     // Output formatted panic details to serial logger
     if let Some(location) = info.location() {
