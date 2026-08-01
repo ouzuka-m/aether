@@ -23,18 +23,11 @@ pub fn _log(level: Level, args: Arguments) {
 }
 
 /// Logs a message at the debug level.
-#[cfg(debug_assertions)]
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => {
         $crate::log::macros::_log($crate::log::level::Level::Debug, format_args!($($arg)*))
     };
-}
-
-#[cfg(not(debug_assertions))]
-#[macro_export]
-macro_rules! debug {
-    ($($arg:tt)*) => {};
 }
 
 /// Logs a message at the info level.
