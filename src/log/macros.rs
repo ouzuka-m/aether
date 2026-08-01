@@ -22,7 +22,8 @@ pub fn _log(level: Level, args: Arguments) {
     });
 }
 
-/// Logs a message at the debug level into the log buffer.
+/// Logs a message at the debug level.
+#[cfg(debug_assertions)]
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => {
@@ -30,7 +31,13 @@ macro_rules! debug {
     };
 }
 
-/// Logs a message at the info level into the log buffer.
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! debug {
+    ($($arg:tt)*) => {};
+}
+
+/// Logs a message at the info level.
 #[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => {
@@ -38,7 +45,7 @@ macro_rules! info {
     };
 }
 
-/// Logs a message at the warn level into the log buffer.
+/// Logs a message at the warn level.
 #[macro_export]
 macro_rules! warn {
     ($($arg:tt)*) => {
@@ -46,7 +53,7 @@ macro_rules! warn {
     };
 }
 
-/// Logs a message at the error level into the log buffer.
+/// Logs a message at the error level.
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => {
