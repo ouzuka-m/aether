@@ -50,9 +50,20 @@ pub extern "x86-interrupt" fn spurious_vector_interrupt(_: InterruptStackFrame) 
 /// and timekeeping tasks. Sends an EOI signal to the Local APIC upon completion.
 pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
     let count = TICK.fetch_add(1, Ordering::Relaxed);
-
     if count.is_multiple_of(1000) {
         debug!("Heartbeat: {} ticks", count);
+    }
+
+    // Fix keyboard sometimes "die" when you spamming keys on startup
+    {
+        let mut status_port: Port<u8> = Port::new(0x64);
+        let mut data_port: Port<u8> = Port::new(0x60);
+        unsafe {
+            while status_port.read() & 0x1 != 0 {
+                let scancode = data_port.read();
+                process_scancode(scancode);
+            }
+        }
     }
 
     timer::arm_tsc_deadline(1);
@@ -65,22 +76,19 @@ pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
 /// layout parser, logs the key, and issues an EOI to the Local APIC.
 pub extern "x86-interrupt" fn keyboard(_: InterruptStackFrame) {
     let scancode: u8 = unsafe { Port::new(0x60).read() };
-    debug!("Keyboard scancode received: {:#04x}", scancode);
+    process_scancode(scancode);
 
+    lapic::eoi();
+}
+
+fn process_scancode(scancode: u8) {
     let mut keyboard = KEYBOARD.lock();
-
     if let Ok(Some(event)) = keyboard.add_byte(scancode)
         && let Some(key) = keyboard.process_keyevent(event)
     {
         match key {
-            DecodedKey::Unicode(c) => {
-                debug!("Keyboard input char: {:?}", c);
-            }
-            DecodedKey::RawKey(k) => {
-                debug!("Keyboard input raw key: {:?}", k);
-            }
+            DecodedKey::Unicode(c) => debug!("Keyboard input char: {:?}", c),
+            DecodedKey::RawKey(k) => debug!("Keyboard input raw key: {:?}", k),
         }
     }
-
-    lapic::eoi();
 }
