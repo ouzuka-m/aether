@@ -12,7 +12,7 @@ use x86_64::{instructions::port::Port, structures::idt::InterruptStackFrame};
 
 use crate::{
     acpi::{lapic, lvt::timer},
-    debug, warn,
+    debug, print, warn,
 };
 
 /// Interrupt vector index for Spurious Vector Interrupts (SVR).
@@ -87,7 +87,10 @@ fn process_scancode(scancode: u8) {
         && let Some(key) = keyboard.process_keyevent(event)
     {
         match key {
-            DecodedKey::Unicode(c) => debug!("Keyboard input char: {:?}", c),
+            DecodedKey::Unicode(c) => {
+                print!("{c}");
+                debug!("Keyboard input char: {:?}", c)
+            }
             DecodedKey::RawKey(k) => debug!("Keyboard input raw key: {:?}", k),
         }
     }

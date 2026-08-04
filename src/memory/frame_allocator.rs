@@ -1,13 +1,10 @@
-use limine::{
-    memmap::{Entry, MEMMAP_USABLE},
-    request::MemmapRequest,
-};
+use limine::memmap::{Entry, MEMMAP_USABLE};
 use x86_64::{
     PhysAddr,
     structures::paging::{FrameAllocator, PhysFrame, Size4KiB},
 };
 
-static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
+use crate::memory::map;
 
 pub struct PhysFrameAllocator {
     entries: &'static [&'static Entry],
@@ -42,12 +39,8 @@ unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
 }
 
 pub fn init() -> PhysFrameAllocator {
-    let memory_map_response = MEMORY_MAP_REQUEST
-        .response()
-        .expect("Failed to receive memory map response from bootloader");
-
     PhysFrameAllocator {
-        entries: memory_map_response.entries(),
+        entries: map::entries(),
         current_entry: 0,
         current_addr: 0,
     }

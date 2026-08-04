@@ -13,7 +13,9 @@ extern crate alloc;
 
 mod acpi;
 mod address;
+mod display;
 mod gdt;
+mod greet;
 mod interrupts;
 mod isa_debug;
 mod log;
@@ -42,26 +44,32 @@ use memory::{frame_allocator, heap_allocator, mapper};
 /// This function never returns (`-> !`).
 #[unsafe(no_mangle)]
 extern "C" fn _start() -> ! {
-    // Step 1: Disable CPU hardware interrupts during critical boot sequence
+    // Disable CPU hardware interrupts during critical boot sequence
     instructions::interrupts::disable();
 
     info!("Aether Kernel starting...");
 
-    // Step 2: Load Global Descriptor Table (GDT) and Task State Segment (TSS)
+    // Load Global Descriptor Table (GDT) and Task State Segment (TSS)
     gdt::init();
 
-    // Step 3: Load Interrupt Descriptor Table (IDT) with exception & IRQ handlers
+    // Load Interrupt Descriptor Table (IDT) with exception & IRQ handlers
     idt::init();
 
-    // Step 4: Initialize virtual memory mapper and physical frame allocator
+    // Initialize virtual memory mapper and physical frame allocator
     let mut mapper = mapper::init();
     let mut frame_allocator = frame_allocator::init();
 
-    // Step 5: Set up the global buddy system heap allocator
+    // Set up the global buddy system heap allocator
     heap_allocator::init(&mut mapper, &mut frame_allocator);
 
-    // Step 6: Parse ACPI tables, disable 8259 PIC, and enable Local/IO APIC
+    // Parse ACPI tables, disable 8259 PIC, and enable Local/IO APIC
     acpi::init();
+
+    // Initialize kernel display
+    display::init();
+
+    // Greet to the screen
+    greet::welcome();
 
     info!("Kernel initialized successfully. Entering idle loop.");
 
