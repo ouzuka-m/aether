@@ -4,7 +4,7 @@ Aether Kernel - Experimental Operating System in Rust
 WHAT IS AETHER?
 ---------------
   Aether is an experimental 64-bit operating system kernel written in Rust.
-  It aims to provide a modular, safe, and modern kernel architecture targeting
+  It aims to provide a safe, and modern kernel architecture targeting
   x86_64 systems using the Limine boot protocol.
 
 HARDWARE & ARCHITECTURE SUPPORT
@@ -18,13 +18,11 @@ PREREQUISITES
   To compile and run Aether, the following packages and tools are required:
 
   - Rust Toolchain:
-      rustc (2024 edition support) with `x86_64-unknown-none` target
-      cargo
-  - Bootloader & ISO Utilities:
+      rustc and cargo. Toolchain version is pinned via `rust-toolchain.toml`.
+  - ISO Utilities:
       xorriso (required to create bootable ISO images)
-      Limine bootloader binaries (pre-configured in `iso/boot/`)
   - Emulator:
-      qemu-system-x86_64
+      qemu-system-x86_64 with a graphical display backend such as `qemu-ui-gtk` or `qemu-ui-sdl`.
 
 BUILDING THE KERNEL
 -------------------
