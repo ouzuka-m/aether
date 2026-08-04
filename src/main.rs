@@ -20,7 +20,7 @@ mod interrupts;
 mod isa_debug;
 mod log;
 mod memory;
-mod stacks;
+mod stack;
 mod tss;
 
 use core::panic::PanicInfo;
