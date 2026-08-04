@@ -31,7 +31,7 @@ struct Selectors {
 }
 
 /// Static lazy initialization of the GDT and its associated segment selectors.
-static PAIR: LazyLock<(GlobalDescriptorTable, Selectors)> = LazyLock::new(|| {
+static GDT_STATE: LazyLock<(GlobalDescriptorTable, Selectors)> = LazyLock::new(|| {
     let mut gdt = GlobalDescriptorTable::new();
 
     let tss = gdt.append(Descriptor::tss_segment(&TASK_STATE_SEGMENT));
@@ -62,7 +62,7 @@ static PAIR: LazyLock<(GlobalDescriptorTable, Selectors)> = LazyLock::new(|| {
 /// # Safety
 /// Reloading segment registers relies on valid segment selectors configured in the GDT.
 pub fn init() {
-    let (gdt, selectors) = &*PAIR;
+    let (gdt, selectors) = &*GDT_STATE;
 
     // Load GDT pointer into CPU descriptor register (GDTR)
     gdt.load();

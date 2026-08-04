@@ -11,7 +11,7 @@ use x86_64::{PhysAddr, VirtAddr};
 use crate::{
     address::ext::{PhysExt, VirtExt},
     debug, info,
-    interrupts::handlers::SVR_IDX,
+    interrupts::handlers::SVR_VECTOR,
 };
 
 /// Offset for the Local APIC ID register.
@@ -33,11 +33,11 @@ static LAPIC_BASE: Once<VirtAddr> = Once::new();
 ///
 /// Converts the physical address to a virtual address, writes to the Spurious
 /// Interrupt Vector Register (SVR at offset `0xF0`) to set the APIC enable bit
-/// and set the spurious interrupt vector index ([`SVR_IDX`]), and stores the
-/// global [`LAPIC_ADDRESS`] singleton.
+/// and set the spurious interrupt vector index ([`SVR_VECTOR`]), and stores the
+/// global [`LAPIC_BASE`] singleton.
 ///
 /// # Parameters
-/// - `lapic_address`: Physical address of the Local APIC base registers.
+/// - `lapic_phys_address`: Physical address of the Local APIC base registers.
 pub fn enable(lapic_phys_address: u64) {
     let lapic_base = PhysAddr::new(lapic_phys_address).to_virt();
 
@@ -48,12 +48,12 @@ pub fn enable(lapic_phys_address: u64) {
 
     LAPIC_BASE.call_once(|| lapic_base);
 
-    let mut svr_value = read_from_lapic(LAPIC_SVR_REG);
+    let mut svr_value = lapic_read(LAPIC_SVR_REG);
 
     svr_value |= SVR_APIC_ENABLE;
-    svr_value |= SVR_IDX as u32;
+    svr_value |= SVR_VECTOR as u32;
 
-    write_to_lapic(LAPIC_SVR_REG, svr_value);
+    lapic_write(LAPIC_SVR_REG, svr_value);
 
     info!("Local APIC enabled (ID: {})", id());
 }
@@ -64,7 +64,7 @@ pub fn enable(lapic_phys_address: u64) {
 /// that processing of the current interrupt has finished, allowing higher or
 /// equal priority interrupts to be delivered.
 pub fn eoi() {
-    write_to_lapic(LAPIC_EOI_REG, 0);
+    lapic_write(LAPIC_EOI_REG, 0);
 }
 
 /// Reads the Local APIC ID of the current processor.
@@ -75,16 +75,16 @@ pub fn eoi() {
 /// # Returns
 /// The APIC ID right-shifted by 24 bits as required by IOAPIC destination matching.
 pub fn id() -> u8 {
-    let value = read_from_lapic(LAPIC_ID_REG);
+    let value = lapic_read(LAPIC_ID_REG);
     (value >> 24) as u8
 }
 
-pub fn read_from_lapic(offset: u64) -> u32 {
+pub fn lapic_read(offset: u64) -> u32 {
     let lapic_base = lapic_base();
     unsafe { ptr::read_volatile(lapic_base.offset(offset).as_ptr::<u32>()) }
 }
 
-pub fn write_to_lapic(offset: u64, value: u32) {
+pub fn lapic_write(offset: u64, value: u32) {
     let lapic_base = lapic_base();
     unsafe {
         ptr::write_volatile(lapic_base.offset(offset).as_mut_ptr::<u32>(), value);

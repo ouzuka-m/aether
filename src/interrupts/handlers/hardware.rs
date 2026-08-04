@@ -16,13 +16,13 @@ use crate::{
 };
 
 /// Interrupt vector index for Spurious Vector Interrupts (SVR).
-pub const SVR_IDX: u8 = 0xFF; // 255
+pub const SVR_VECTOR: u8 = 0xFF; // 255
 
 /// Interrupt vector index for APIC Timer interrupts.
-pub const TIMER_IDX: u8 = 0x20; // 32
+pub const TIMER_VECTOR: u8 = 0x20; // 32
 
 /// Interrupt vector index for PS/2 Keyboard interrupts.
-pub const KEYBOARD_IDX: u8 = 0x21; // 33
+pub const KEYBOARD_VECTOR: u8 = 0x21; // 33
 
 /// Thread-safe PS/2 keyboard driver instance.
 static KEYBOARD: LazyLock<Mutex<PS2Keyboard<Us104Key, ScancodeSet1>>> = LazyLock::new(|| {

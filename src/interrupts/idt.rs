@@ -2,7 +2,7 @@ use spin::lazylock::LazyLock;
 use x86_64::structures::idt::InterruptDescriptorTable;
 
 use crate::{
-    interrupts::handlers::{self, KEYBOARD_IDX, SVR_IDX, TIMER_IDX},
+    interrupts::handlers::{self, KEYBOARD_VECTOR, SVR_VECTOR, TIMER_VECTOR},
     stack,
 };
 
@@ -49,9 +49,9 @@ static INTERRUPT_DESCRIPTOR_TABLE: LazyLock<InterruptDescriptorTable> = LazyLock
         .set_handler_fn(handlers::security_exception); // Vector 30
 
     // Hardware interrupts
-    idt[TIMER_IDX].set_handler_fn(handlers::timer);
-    idt[KEYBOARD_IDX].set_handler_fn(handlers::keyboard);
-    idt[SVR_IDX].set_handler_fn(handlers::spurious_vector_interrupt);
+    idt[TIMER_VECTOR].set_handler_fn(handlers::timer);
+    idt[KEYBOARD_VECTOR].set_handler_fn(handlers::keyboard);
+    idt[SVR_VECTOR].set_handler_fn(handlers::spurious_vector_interrupt);
 
     // Need to switch to a different stack for some interrupts
     unsafe {

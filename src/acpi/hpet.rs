@@ -18,7 +18,7 @@ pub fn init(hpet: &HpetInfo) {
 
     HPET_BASE.call_once(|| hpet_base);
 
-    let period_fs = read_from_hpet(CAP_ID) >> 32;
+    let period_fs = hpet_read(CAP_ID) >> 32;
     if period_fs == 0 || period_fs > 0x05F5E100 {
         panic!("Invalid HPET main counter tick");
     }
@@ -26,7 +26,7 @@ pub fn init(hpet: &HpetInfo) {
     PERIOD_FS.call_once(|| period_fs);
 
     // Enable CNF
-    write_to_hpet(CONFIG, 0x1);
+    hpet_write(CONFIG, 0x1);
 }
 
 pub fn wait_ns(ns: u64) {
@@ -44,20 +44,20 @@ pub fn wait_ms(ms: u64) {
 }
 
 pub fn read_counter() -> u64 {
-    read_from_hpet(MAIN_COUNTER)
+    hpet_read(MAIN_COUNTER)
 }
 
-pub fn read_from_hpet(offset: u64) -> u64 {
-    let hpet_base = hpet_address();
+pub fn hpet_read(offset: u64) -> u64 {
+    let hpet_base = hpet_base();
     unsafe { ptr::read_volatile(hpet_base.offset(offset).as_ptr::<u64>()) }
 }
 
-pub fn write_to_hpet(offset: u64, value: u64) {
-    let hpet_base = hpet_address();
+pub fn hpet_write(offset: u64, value: u64) {
+    let hpet_base = hpet_base();
     unsafe { ptr::write_volatile(hpet_base.offset(offset).as_mut_ptr::<u64>(), value) }
 }
 
-fn hpet_address() -> VirtAddr {
+fn hpet_base() -> VirtAddr {
     *HPET_BASE
         .get()
         .expect("HPET address hasn't bee initialized")

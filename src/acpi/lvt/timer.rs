@@ -5,7 +5,7 @@ use x86_64::registers::model_specific::Msr;
 
 use crate::{
     acpi::{hpet, lapic},
-    interrupts::handlers::TIMER_IDX,
+    interrupts::handlers::TIMER_VECTOR,
 };
 
 const LVT: u64 = 0x320;
@@ -19,13 +19,10 @@ const IA32_TSC_DEADLINE: u32 = 0x6E0;
 static TICKS_PER_MS: Once<u64> = Once::new();
 
 pub fn init() {
-    assert!(
-        supports_tsc_deadline(),
-        "This CPU doesn't support TSC-Deadline"
-    );
+    assert!(supports_tsc_deadline(), "CPU doesn't support TSC-Deadline");
 
     // Using TSC-Deadline mode
-    lapic::write_to_lapic(LVT, TSC_MODE | TIMER_IDX as u32);
+    lapic::lapic_write(LVT, TSC_MODE | TIMER_VECTOR as u32);
 
     let start = unsafe { core::arch::x86_64::_rdtsc() };
     hpet::wait_ms(CALIBRATION_MS);

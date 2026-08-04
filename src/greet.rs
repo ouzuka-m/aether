@@ -3,7 +3,7 @@ use raw_cpuid::CpuId;
 use crate::{display::framebuffer, memory, println};
 
 pub fn welcome() {
-    println!("Aether 0.0.1-dev\n");
+    println!("Welcome to Aether!\n");
 
     let cpuid = CpuId::new();
 
