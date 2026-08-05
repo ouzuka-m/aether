@@ -79,7 +79,7 @@ extern "C" fn _start() -> ! {
 
     isa_debug::exit_success();
 
-    // Step 7: Enable CPU interrupts and enter low-power idle loop
+    // Enable CPU interrupts and enter low-power idle loop
     loop {
         // Re-enable interrupts and halt CPU until next hardware interrupt arrives
         instructions::interrupts::enable_and_hlt();
