@@ -14,6 +14,7 @@ extern crate alloc;
 mod acpi;
 mod address;
 mod display;
+mod drivers;
 mod gdt;
 mod greet;
 mod interrupts;
@@ -63,7 +64,10 @@ extern "C" fn _start() -> ! {
     heap_allocator::init(&mut mapper, &mut frame_allocator);
 
     // Parse ACPI tables, disable 8259 PIC, and enable Local/IO APIC
-    acpi::init();
+    let platform = acpi::init();
+
+    // Initialize all subsystems
+    drivers::init(&platform);
 
     // Initialize kernel display
     display::init();

@@ -4,7 +4,7 @@ use x86_64::{
     structures::paging::{FrameAllocator, PhysFrame, Size4KiB},
 };
 
-use crate::memory::map;
+use crate::memory::memmap;
 
 pub struct PhysFrameAllocator {
     entries: &'static [&'static Entry],
@@ -40,7 +40,7 @@ unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
 
 pub fn init() -> PhysFrameAllocator {
     PhysFrameAllocator {
-        entries: map::entries(),
+        entries: memmap::entries(),
         current_entry: 0,
         current_addr: 0,
     }

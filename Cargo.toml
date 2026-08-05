@@ -18,7 +18,6 @@ pc-keyboard = "0.9"
 noto-sans-mono-bitmap = { version = "0.3", default-features = false, features = ["size_20", "regular", "unicode-basic-latin"] }
 buddy_system_allocator = { version = "0.13", default-features = false, features = ["use_spin"] }
 acpi = "6.1"
-raw-cpuid = "11.6"
 
 [[bin]]
 name = "aether"

@@ -11,8 +11,9 @@ use spin::{lazylock::LazyLock, mutex::Mutex};
 use x86_64::{instructions::port::Port, structures::idt::InterruptStackFrame};
 
 use crate::{
-    acpi::{lapic, lvt::timer},
-    debug, print, warn,
+    debug,
+    drivers::{lapic, tsc_deadline},
+    warn,
 };
 
 /// Interrupt vector index for Spurious Vector Interrupts (SVR).
@@ -66,7 +67,7 @@ pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
         }
     }
 
-    timer::arm_tsc_deadline(1);
+    tsc_deadline::arm(1);
     lapic::eoi();
 }
 
@@ -87,10 +88,7 @@ fn process_scancode(scancode: u8) {
         && let Some(key) = keyboard.process_keyevent(event)
     {
         match key {
-            DecodedKey::Unicode(c) => {
-                print!("{c}");
-                debug!("Keyboard input char: {:?}", c)
-            }
+            DecodedKey::Unicode(c) => debug!("Keyboard input char: {:?}", c),
             DecodedKey::RawKey(k) => debug!("Keyboard input raw key: {:?}", k),
         }
     }

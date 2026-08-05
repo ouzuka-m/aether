@@ -2,7 +2,7 @@ use limine::{memmap::Entry, request::MemmapRequest};
 
 static MEMORY_MAP_REQUEST: MemmapRequest = MemmapRequest::new();
 
-pub fn usable() -> usize {
+pub fn size() -> usize {
     let mut total = 0usize;
 
     for entry in entries() {

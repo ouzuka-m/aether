@@ -1,9 +1,9 @@
 use core::fmt::{Arguments, Write};
 use x86_64::instructions::interrupts;
 
-use crate::log::{
-    level::{LOG_LEVEL, Level},
-    uart::SERIAL,
+use crate::{
+    drivers::uart::SERIAL,
+    log::level::{LOG_LEVEL, Level},
 };
 
 /// Internal logging function used by the logging macros.

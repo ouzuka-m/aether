@@ -27,33 +27,33 @@ const LAPIC_SVR_REG: u64 = 0xF0;
 const SVR_APIC_ENABLE: u32 = 1 << 8;
 
 /// Global thread-safe singleton holding the initialized LAPIC virtual address.
-static LAPIC_BASE: Once<VirtAddr> = Once::new();
+static BASE_ADDRESS: Once<VirtAddr> = Once::new();
 
 /// Enables the Local APIC at the given physical base address.
 ///
 /// Converts the physical address to a virtual address, writes to the Spurious
 /// Interrupt Vector Register (SVR at offset `0xF0`) to set the APIC enable bit
 /// and set the spurious interrupt vector index ([`SVR_VECTOR`]), and stores the
-/// global [`LAPIC_BASE`] singleton.
+/// global [`BASE_ADDRESS`] singleton.
 ///
 /// # Parameters
 /// - `lapic_phys_address`: Physical address of the Local APIC base registers.
 pub fn enable(lapic_phys_address: u64) {
-    let lapic_base = PhysAddr::new(lapic_phys_address).to_virt();
+    let base_address = PhysAddr::new(lapic_phys_address).to_virt();
 
     debug!(
         "Enabling Local APIC (Phys: {:#x}, Virt: {:#x})",
-        lapic_phys_address, lapic_base
+        lapic_phys_address, base_address
     );
 
-    LAPIC_BASE.call_once(|| lapic_base);
+    BASE_ADDRESS.call_once(|| base_address);
 
-    let mut svr_value = lapic_read(LAPIC_SVR_REG);
+    let mut svr_value = read(LAPIC_SVR_REG);
 
     svr_value |= SVR_APIC_ENABLE;
     svr_value |= SVR_VECTOR as u32;
 
-    lapic_write(LAPIC_SVR_REG, svr_value);
+    write(LAPIC_SVR_REG, svr_value);
 
     info!("Local APIC enabled (ID: {})", id());
 }
@@ -64,7 +64,7 @@ pub fn enable(lapic_phys_address: u64) {
 /// that processing of the current interrupt has finished, allowing higher or
 /// equal priority interrupts to be delivered.
 pub fn eoi() {
-    lapic_write(LAPIC_EOI_REG, 0);
+    write(LAPIC_EOI_REG, 0);
 }
 
 /// Reads the Local APIC ID of the current processor.
@@ -75,22 +75,26 @@ pub fn eoi() {
 /// # Returns
 /// The APIC ID right-shifted by 24 bits as required by IOAPIC destination matching.
 pub fn id() -> u8 {
-    let value = lapic_read(LAPIC_ID_REG);
+    let value = read(LAPIC_ID_REG);
     (value >> 24) as u8
 }
 
-pub fn lapic_read(offset: u64) -> u32 {
-    let lapic_base = lapic_base();
-    unsafe { ptr::read_volatile(lapic_base.offset(offset).as_ptr::<u32>()) }
+pub fn configure_lvt(reg: u64, vector: u8, flags: u32) {
+    write(reg, flags | vector as u32);
 }
 
-pub fn lapic_write(offset: u64, value: u32) {
-    let lapic_base = lapic_base();
+fn read(offset: u64) -> u32 {
+    let base_address = base_address();
+    unsafe { ptr::read_volatile(base_address.offset(offset).as_ptr::<u32>()) }
+}
+
+fn write(offset: u64, value: u32) {
+    let base_address = base_address();
     unsafe {
-        ptr::write_volatile(lapic_base.offset(offset).as_mut_ptr::<u32>(), value);
+        ptr::write_volatile(base_address.offset(offset).as_mut_ptr::<u32>(), value);
     }
 }
 
-fn lapic_base() -> VirtAddr {
-    *LAPIC_BASE.get().expect("LAPIC hasn't been initialized")
+fn base_address() -> VirtAddr {
+    *BASE_ADDRESS.get().expect("LAPIC hasn't been initialized")
 }

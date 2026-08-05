@@ -19,8 +19,7 @@ pub fn init() {
         .framebuffers();
 
     let framebuffer = framebuffers
-        .iter()
-        .next()
+        .first()
         .expect("No framebuffer provided by bootloader");
 
     FRAMEBUFFER.call_once(|| {
