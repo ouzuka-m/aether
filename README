@@ -14,42 +14,76 @@ HARDWARE & ARCHITECTURE SUPPORT
   such as QEMU.
 
 PREREQUISITES
----------------
+-------------
   To compile and run Aether, the following packages and tools are required:
 
   - Rust Toolchain:
-      rustc and cargo. Toolchain version is pinned via `rust-toolchain.toml`.
+    rustc and cargo. The toolchain version is pinned via
+    `rust-toolchain.toml`.
+
   - ISO Utilities:
-      xorriso (required to create bootable ISO images)
+    xorriso (required to create bootable ISO images)
+
   - Emulator:
-      qemu-system-x86_64 with a graphical display backend such as `qemu-ui-gtk` or `qemu-ui-sdl`.
+    qemu-system-x86_64 with a graphical display backend such as
+    `qemu-ui-gtk` or `qemu-ui-sdl`.
+
+  - UEFI Firmware:
+    OVMF (Open Virtual Machine Firmware) or another compatible
+    x86_64 UEFI implementation.
+
+  - Hardware Virtualization:
+    KVM support is required. Aether relies on CPU features that are not
+    fully available under QEMU's software emulation (TCG), including
+    TSC-Deadline timer functionality.
 
 BUILDING THE KERNEL
 -------------------
   Build scripts are provided in the `build/` directory.
 
   1. Debug Build:
-       $ ./build/debug.sh
+     $ ./build/debug.sh
 
      This command compiles the kernel in debug mode, places the ELF binary
      into `iso/boot/aether.elf`, and creates the bootable `aether.iso` image.
 
   2. Release Build:
-       $ ./build/release.sh
+     $ ./build/release.sh
 
-     This command compiles the kernel with optimizations and generates the final
-     `aether.iso` image.
+     This command compiles the kernel with optimizations and generates the
+     final `aether.iso` image.
 
 RUNNING WITH QEMU
------------------
+-------------------
   After building `aether.iso`, you can launch it in QEMU using one of the
-  following commands:
+  following commands.
+
+  Note:
+    Aether is a UEFI-only operating system and requires OVMF firmware.
+    The firmware path may vary depending on the host operating system or
+    distribution.
 
   Standard Execution:
-    $ qemu-system-x86_64 -cdrom aether.iso -cpu host -enable-kvm
+    $ qemu-system-x86_64 \
+      -bios <path-to-OVMF-firmware> \
+      -cdrom aether.iso \
+      -cpu host \
+      -enable-kvm
 
   With Serial Output to Terminal:
-    $ qemu-system-x86_64 -cdrom aether.iso -cpu host -enable-kvm -serial stdio
+    $ qemu-system-x86_64 \
+      -bios <path-to-OVMF-firmware> \
+      -cdrom aether.iso \
+      -cpu host \
+      -enable-kvm \
+      -serial stdio
+
+NOTES
+-----
+  - Legacy BIOS boot is not supported.
+  - UEFI firmware is required.
+  - QEMU + OVMF + KVM is the primary development and testing environment.
+  - Limine is used as the bootloader.
 
 DIRECTORY LAYOUT
 -----------------
