@@ -3,18 +3,23 @@ Aether - Experimental Operating System in Rust
 
 WHAT IS AETHER?
 ---------------
+
   Aether is an experimental 64-bit operating system kernel written in Rust.
   It aims to provide a safe, and modern kernel architecture targeting
   x86_64 systems using the Limine boot protocol.
 
+
 HARDWARE & ARCHITECTURE SUPPORT
 -------------------------------
+
   Aether currently targets the 64-bit x86 architecture (x86_64-unknown-none).
   It is designed to run on bare-metal x86_64 hardware or hypervisors / emulators
   such as QEMU.
 
+
 PREREQUISITES
 -------------
+
   To compile and run Aether, the following packages and tools are required:
 
   - Rust Toolchain:
@@ -37,8 +42,19 @@ PREREQUISITES
     fully available under QEMU's software emulation (TCG), including
     TSC-Deadline timer functionality.
 
+
+HOST PLATFORM
+-------------
+
+  Linux is currently the only supported build and development platform.
+
+  Windows and macOS have not been tested. While cross-compilation may be
+  possible, no support is provided for non-Linux environments.
+
+
 BUILDING THE KERNEL
 -------------------
+
   Build scripts are provided in the `build/` directory.
 
   1. Debug Build:
@@ -53,8 +69,10 @@ BUILDING THE KERNEL
      This command compiles the kernel with optimizations and generates the
      final `aether.iso` image.
 
+
 RUNNING WITH QEMU
--------------------
+-----------------
+
   After building `aether.iso`, you can launch it in QEMU using one of the
   following commands.
 
@@ -78,15 +96,18 @@ RUNNING WITH QEMU
       -enable-kvm \
       -serial stdio
 
+
 NOTES
------
+------
+
   - Legacy BIOS boot is not supported.
   - UEFI firmware is required.
   - QEMU + OVMF + KVM is the primary development and testing environment.
   - Limine is used as the bootloader.
 
+
 DIRECTORY LAYOUT
------------------
+----------------
   build/      - Build automation scripts (debug.sh and release.sh).
   iso/        - ISO structure containing Limine bootloader configuration and binaries.
   src/        - Core kernel source code written in Rust (GDT, interrupts, memory, ACPI, logging).
@@ -95,7 +116,9 @@ DIRECTORY LAYOUT
   Cargo.toml  - Package manifest and crate dependencies.
   LICENSE     - GNU General Public License v2.0 (GPL-2.0).
 
+
 LICENSE
 -------
+
   Aether is distributed under the terms of the GNU General Public License v2.0 (GPL-2.0).
   See the LICENSE file for details.
