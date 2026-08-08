@@ -108,6 +108,7 @@ NOTES
 
 DIRECTORY LAYOUT
 ----------------
+
   build/      - Build automation scripts (debug.sh and release.sh).
   iso/        - ISO structure containing Limine bootloader configuration and binaries.
   src/        - Core kernel source code written in Rust (GDT, interrupts, memory, ACPI, logging).
