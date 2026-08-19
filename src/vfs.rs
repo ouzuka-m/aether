@@ -77,8 +77,6 @@ fn parse(data: &[u8]) -> Vec<Entry<'_>> {
 
         let data = &data[end_header..(end_header + size as usize)];
 
-        crate::info!("{}", alloc::string::String::from_utf8_lossy(data));
-
         entries.push(Entry { name, data });
 
         offset += (BLOCK + size as usize + 511) & !511;
