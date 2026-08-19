@@ -2,13 +2,14 @@
 
 use alloc::vec::Vec;
 use limine::request::ModulesRequest;
-use spin::once::Once;
+use spin::{lazylock::LazyLock, once::Once};
 
 const BLOCK: usize = 512;
 
 #[derive(Debug)]
 pub struct Entry<'a> {
     name: &'a str,
+    size: u64,
     data: &'a [u8],
 }
 
@@ -77,7 +78,7 @@ fn parse(data: &[u8]) -> Vec<Entry<'_>> {
 
         let data = &data[end_header..(end_header + size as usize)];
 
-        entries.push(Entry { name, data });
+        entries.push(Entry { name, size, data });
 
         offset += (BLOCK + size as usize + 511) & !511;
     }
