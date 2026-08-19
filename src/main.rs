@@ -23,12 +23,12 @@ mod log;
 mod memory;
 mod stack;
 mod tss;
+mod vfs;
 
 use core::panic::PanicInfo;
-use x86_64::instructions;
-
 use interrupts::idt;
 use memory::{frame_allocator, heap_allocator, mapper};
+use x86_64::instructions;
 
 /// Kernel entry point called by the Limine bootloader.
 ///
@@ -68,6 +68,9 @@ extern "C" fn _start() -> ! {
 
     // Initialize all subsystems
     drivers::init(&platform);
+
+    // Initialize virtual file system (VFS)
+    vfs::init();
 
     // Initialize kernel display
     display::init();
