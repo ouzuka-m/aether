@@ -2,7 +2,7 @@
 
 use alloc::vec::Vec;
 use limine::request::ModulesRequest;
-use spin::{lazylock::LazyLock, once::Once};
+use spin::once::Once;
 
 const BLOCK: usize = 512;
 
