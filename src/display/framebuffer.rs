@@ -62,8 +62,8 @@ impl FrameBuffer {
         }
     }
 
-    fn put_pixel(&self, x: usize, y: usize, rgba: u32) {
-        unsafe { *self.address.add(y * self.stride + x) = rgba }
+    fn put_pixel(&self, x: usize, y: usize, color: u32) {
+        unsafe { *self.address.add(y * self.stride + x) = color }
     }
 }
 
