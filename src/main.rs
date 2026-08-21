@@ -18,9 +18,9 @@ mod drivers;
 mod gdt;
 mod greet;
 mod interrupts;
-mod isa_debug;
 mod log;
 mod memory;
+mod qemu;
 mod stack;
 mod tarfs;
 mod tss;
@@ -80,7 +80,7 @@ extern "C" fn _start() -> ! {
 
     info!("Kernel initialized successfully. Entering idle loop.");
 
-    isa_debug::exit_success();
+    qemu::exit_success();
 
     // Enable CPU interrupts and enter low-power idle loop
     loop {
@@ -118,7 +118,7 @@ fn panic(info: &PanicInfo) -> ! {
         error!("{}\n\nKernel halted.", info.message(),);
     }
 
-    isa_debug::exit_failure();
+    qemu::exit_failure();
 
     // Enter infinite halt loop
     loop {
