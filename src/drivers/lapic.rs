@@ -38,7 +38,7 @@ static BASE_ADDRESS: Once<VirtAddr> = Once::new();
 ///
 /// # Parameters
 /// - `lapic_phys_address`: Physical address of the Local APIC base registers.
-pub fn enable(lapic_phys_address: u64) {
+pub fn init(lapic_phys_address: u64) {
     let base_address = PhysAddr::new(lapic_phys_address).to_virt();
 
     debug!(

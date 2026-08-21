@@ -25,7 +25,7 @@ pub fn init(platform: &AcpiPlatform<AcpiHandler>) {
     let hpet_info = HpetInfo::new(&platform.tables).expect("HPET information not found");
     hpet::init(&hpet_info);
 
-    lapic::enable(apic.local_apic_address);
+    lapic::init(apic.local_apic_address);
 
     tsc_deadline::init();
 
