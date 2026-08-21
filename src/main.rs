@@ -22,8 +22,8 @@ mod isa_debug;
 mod log;
 mod memory;
 mod stack;
+mod tarfs;
 mod tss;
-mod vfs;
 
 use core::panic::PanicInfo;
 use interrupts::idt;
@@ -70,7 +70,7 @@ extern "C" fn _start() -> ! {
     drivers::init(&platform);
 
     // Initialize virtual file system (VFS)
-    vfs::init();
+    tarfs::init();
 
     // Initialize kernel display
     display::init();
