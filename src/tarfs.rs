@@ -35,11 +35,7 @@ pub fn init() {
 
 pub fn open<'a>(path: &str) -> Option<&'a Entry<'a>> {
     let tarfs = tarfs();
-    tarfs.iter().find(|entry| {
-        assert_eq!(entry.name, path);
-
-        entry.name == path
-    })
+    tarfs.iter().find(|entry| entry.name == path)
 }
 
 pub fn read<'a>(entry: &'a Entry<'a>) -> &'a [u8] {
