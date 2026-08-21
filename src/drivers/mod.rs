@@ -14,7 +14,7 @@ use crate::{acpi::handler::AcpiHandler, info};
 
 pub fn init(platform: &AcpiPlatform<AcpiHandler>) {
     let InterruptModel::Apic(apic) = &platform.interrupt_model else {
-        panic!("Death");
+        panic!("Unsupported interrupt model, can't handle IRQs");
     };
 
     info!("APIC interrupt model detected");
