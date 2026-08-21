@@ -32,5 +32,5 @@ pub fn welcome() {
 
     println!("Framebuffer: {width}x{height}\n");
 
-    println!("Report issues at https://github.com/ouzuka-m/lumine/issues");
+    println!("Report issues at https://github.com/ouzuka-m/aether/issues");
 }
