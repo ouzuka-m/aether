@@ -20,12 +20,14 @@ mod memory;
 mod qemu;
 
 use core::panic::PanicInfo;
-use memory::{frame_allocator, heap_allocator, mapper};
 use x86_64::instructions;
 
-use arch::x86_64::{gdt, idt};
-
-use crate::{display::greet, fs::tarfs};
+use self::{
+    arch::x86_64::{gdt, idt},
+    display::greet,
+    fs::tarfs,
+    memory::{frame_allocator, heap_allocator, mapper},
+};
 
 /// Kernel entry point called by the Limine bootloader.
 ///
