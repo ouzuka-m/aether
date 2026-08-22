@@ -12,6 +12,7 @@
 extern crate alloc;
 
 mod arch;
+mod config;
 mod display;
 mod drivers;
 mod fs;

@@ -1,14 +1,11 @@
 use core::fmt::{Arguments, Write};
 use x86_64::instructions::interrupts;
 
-use crate::{
-    drivers::uart::SERIAL,
-    log::level::{LOG_LEVEL, Level},
-};
+use crate::{config::CONFIG, drivers::uart::SERIAL, log::level::Level};
 
 /// Internal logging function used by the logging macros.
 pub fn _log(level: Level, args: Arguments) {
-    if level < LOG_LEVEL {
+    if level < CONFIG.log_level {
         return;
     }
 

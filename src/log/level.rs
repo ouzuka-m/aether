@@ -1,6 +1,3 @@
-// You can change the log level here.
-pub const LOG_LEVEL: Level = Level::Debug;
-
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq)]
 pub enum Level {
     Debug = 0,
