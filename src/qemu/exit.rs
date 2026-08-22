@@ -1,5 +1,5 @@
 /// Exits the program successfully.
-pub fn exit_success() {
+pub fn success() {
     unsafe {
         core::arch::asm!(
             "out dx, eax",
@@ -10,7 +10,7 @@ pub fn exit_success() {
 }
 
 /// Exits the program with a failure code.
-pub fn exit_failure() {
+pub fn failure() {
     unsafe {
         core::arch::asm!(
             "out dx, eax",

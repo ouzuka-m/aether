@@ -8,8 +8,8 @@ use spin::lazylock::LazyLock;
 use x86_64::{VirtAddr, structures::tss::TaskStateSegment};
 
 use crate::{
-    address::ext::VirtExt,
-    stack::{self, STACK_SIZE, Stack},
+    arch::x86_64::stack::{self, Stack},
+    memory::address::ext::VirtExt,
 };
 
 pub static TASK_STATE_SEGMENT: LazyLock<TaskStateSegment> = LazyLock::new(|| {
@@ -23,5 +23,5 @@ pub static TASK_STATE_SEGMENT: LazyLock<TaskStateSegment> = LazyLock::new(|| {
 });
 
 fn stack_end(stack_ptr: *const Stack) -> VirtAddr {
-    VirtAddr::from_ptr(stack_ptr).offset(STACK_SIZE as u64)
+    VirtAddr::from_ptr(stack_ptr).offset(stack::STACK_SIZE as u64)
 }

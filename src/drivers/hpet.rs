@@ -4,7 +4,7 @@ use acpi::HpetInfo;
 use spin::once::Once;
 use x86_64::{PhysAddr, VirtAddr};
 
-use crate::address::ext::{PhysExt, VirtExt};
+use crate::memory::address::ext::{PhysExt, VirtExt};
 
 const CAP_ID: u64 = 0x000;
 const CONFIG: u64 = 0x010;

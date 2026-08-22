@@ -6,33 +6,14 @@
 
 use core::sync::atomic::{AtomicU64, Ordering};
 
-use pc_keyboard::{DecodedKey, HandleControl, PS2Keyboard, ScancodeSet1, layouts::Us104Key};
-use spin::{lazylock::LazyLock, mutex::Mutex};
-use x86_64::{instructions::port::Port, structures::idt::InterruptStackFrame};
+use pc_keyboard::DecodedKey;
+use x86_64::structures::idt::InterruptStackFrame;
 
 use crate::{
     debug,
-    drivers::{lapic, tsc_deadline},
+    drivers::{apic::lapic, input::ps2_keyboard, tsc_deadline},
     warn,
 };
-
-/// Interrupt vector index for Spurious Vector Interrupts (SVR).
-pub const SVR_VECTOR: u8 = 0xFF; // 255
-
-/// Interrupt vector index for APIC Timer interrupts.
-pub const TIMER_VECTOR: u8 = 0x20; // 32
-
-/// Interrupt vector index for PS/2 Keyboard interrupts.
-pub const KEYBOARD_VECTOR: u8 = 0x21; // 33
-
-/// Thread-safe PS/2 keyboard driver instance.
-static KEYBOARD: LazyLock<Mutex<PS2Keyboard<Us104Key, ScancodeSet1>>> = LazyLock::new(|| {
-    Mutex::new(PS2Keyboard::new(
-        ScancodeSet1::new(),
-        Us104Key,
-        HandleControl::Ignore,
-    ))
-});
 
 static TICK: AtomicU64 = AtomicU64::new(0);
 
@@ -56,18 +37,10 @@ pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
     }
 
     // Fix keyboard sometimes "die" when you spamming keys on startup
-    {
-        let mut status_port: Port<u8> = Port::new(0x64);
-        let mut data_port: Port<u8> = Port::new(0x60);
-        unsafe {
-            while status_port.read() & 0x1 != 0 {
-                let scancode = data_port.read();
-                process_scancode(scancode);
-            }
-        }
-    }
+    ps2_keyboard::clear_buffer();
 
     tsc_deadline::arm(1);
+
     lapic::eoi();
 }
 
@@ -76,20 +49,13 @@ pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
 /// Reads raw scancodes from I/O port `0x60`, decodes keypress events using the
 /// layout parser, logs the key, and issues an EOI to the Local APIC.
 pub extern "x86-interrupt" fn keyboard(_: InterruptStackFrame) {
-    let scancode: u8 = unsafe { Port::new(0x60).read() };
-    process_scancode(scancode);
-
-    lapic::eoi();
-}
-
-fn process_scancode(scancode: u8) {
-    let mut keyboard = KEYBOARD.lock();
-    if let Ok(Some(event)) = keyboard.add_byte(scancode)
-        && let Some(key) = keyboard.process_keyevent(event)
-    {
+    let scancode = ps2_keyboard::read();
+    if let Some(key) = ps2_keyboard::decode(scancode) {
         match key {
             DecodedKey::Unicode(c) => debug!("Keyboard input char: {:?}", c),
             DecodedKey::RawKey(k) => debug!("Keyboard input raw key: {:?}", k),
         }
     }
+
+    lapic::eoi();
 }

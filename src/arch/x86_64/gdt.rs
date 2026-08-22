@@ -12,7 +12,7 @@ use x86_64::{
     structures::gdt::{Descriptor, GlobalDescriptorTable, SegmentSelector},
 };
 
-use crate::tss::TASK_STATE_SEGMENT;
+use crate::arch::x86_64::tss::TASK_STATE_SEGMENT;
 
 /// Holds the segment selectors generated during GDT setup.
 struct Selectors {

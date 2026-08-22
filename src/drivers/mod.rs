@@ -1,19 +1,21 @@
+pub mod acpi;
+pub mod apic;
 pub mod hpet;
-pub mod ioapic;
-pub mod lapic;
+pub mod input;
 pub mod pic;
 pub mod tsc_deadline;
 pub mod uart;
 
-use acpi::{
-    HpetInfo,
-    platform::{AcpiPlatform, InterruptModel},
+use crate::{
+    drivers::apic::{ioapic, lapic},
+    info,
 };
+use ::acpi::{HpetInfo, platform::InterruptModel};
 
-use crate::{acpi::handler::AcpiHandler, info};
+pub fn init() {
+    let acpi = acpi::init();
 
-pub fn init(platform: &AcpiPlatform<AcpiHandler>) {
-    let InterruptModel::Apic(apic) = &platform.interrupt_model else {
+    let InterruptModel::Apic(apic) = &acpi.interrupt_model else {
         panic!("Unsupported interrupt model, can't handle IRQs");
     };
 
@@ -22,7 +24,7 @@ pub fn init(platform: &AcpiPlatform<AcpiHandler>) {
     // Disable Intel PIC 8259
     pic::disable();
 
-    let hpet_info = HpetInfo::new(&platform.tables).expect("HPET information not found");
+    let hpet_info = HpetInfo::new(&acpi.tables).expect("HPET information not found");
     hpet::init(&hpet_info);
 
     lapic::init(apic.local_apic_address);

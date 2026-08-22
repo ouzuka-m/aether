@@ -11,24 +11,21 @@
 
 extern crate alloc;
 
-mod acpi;
-mod address;
+mod arch;
 mod display;
 mod drivers;
-mod gdt;
-mod greet;
-mod interrupts;
+mod fs;
 mod log;
 mod memory;
 mod qemu;
-mod stack;
-mod tarfs;
-mod tss;
 
 use core::panic::PanicInfo;
-use interrupts::idt;
 use memory::{frame_allocator, heap_allocator, mapper};
 use x86_64::instructions;
+
+use arch::x86_64::{gdt, idt};
+
+use crate::{display::greet, fs::tarfs};
 
 /// Kernel entry point called by the Limine bootloader.
 ///
@@ -63,11 +60,8 @@ extern "C" fn _start() -> ! {
     // Set up the global buddy system heap allocator
     heap_allocator::init(&mut mapper, &mut frame_allocator);
 
-    // Parse ACPI tables, disable 8259 PIC, and enable Local/IO APIC
-    let platform = acpi::init();
-
     // Initialize all subsystems
-    drivers::init(&platform);
+    drivers::init();
 
     // Initialize virtual file system (VFS)
     tarfs::init();
@@ -80,7 +74,7 @@ extern "C" fn _start() -> ! {
 
     info!("Kernel initialized successfully. Entering idle loop.");
 
-    qemu::exit_success();
+    qemu::exit::success();
 
     // Enable CPU interrupts and enter low-power idle loop
     loop {
@@ -118,7 +112,7 @@ fn panic(info: &PanicInfo) -> ! {
         error!("{}\n\nKernel halted.", info.message(),);
     }
 
-    qemu::exit_failure();
+    qemu::exit::failure();
 
     // Enter infinite halt loop
     loop {

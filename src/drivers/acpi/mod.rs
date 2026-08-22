@@ -6,8 +6,8 @@
 pub mod handler;
 
 use crate::{
-    address::ext::{PhysExt, VirtExt},
     debug,
+    memory::address::ext::{PhysExt, VirtExt},
 };
 
 use self::handler::AcpiHandler;

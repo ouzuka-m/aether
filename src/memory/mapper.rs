@@ -1,6 +1,6 @@
 use x86_64::{registers::control::Cr3, structures::paging::OffsetPageTable};
 
-use crate::address::{ext::PhysExt, hhdm::HHDM};
+use crate::memory::address::{ext::PhysExt, hhdm::HHDM};
 
 pub fn init() -> OffsetPageTable<'static> {
     let (level_4_frame, _) = Cr3::read();

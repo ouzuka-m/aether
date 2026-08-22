@@ -4,8 +4,8 @@ use spin::once::Once;
 use x86_64::registers::model_specific::Msr;
 
 use crate::{
+    arch::x86_64::idt::TIMER_VECTOR,
     drivers::{hpet, lapic},
-    interrupts::handlers::TIMER_VECTOR,
 };
 
 const LVT: u64 = 0x320;
