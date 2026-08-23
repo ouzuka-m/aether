@@ -5,7 +5,7 @@
 
 use x86_64::{PhysAddr, VirtAddr};
 
-use crate::memory::address::hhdm::HHDM;
+use crate::boot::info::HHDM;
 
 /// Extension trait for physical memory addresses ([`PhysAddr`]).
 pub trait PhysExt {

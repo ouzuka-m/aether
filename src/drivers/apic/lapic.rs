@@ -11,7 +11,7 @@ use x86_64::{PhysAddr, VirtAddr};
 use crate::{
     arch::x86_64::idt::SVR_VECTOR,
     debug, info,
-    memory::address::ext::{PhysExt, VirtExt},
+    memory::address::{PhysExt, VirtExt},
 };
 
 /// Offset for the Local APIC ID register.

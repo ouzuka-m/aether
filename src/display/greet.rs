@@ -2,7 +2,10 @@ use core::arch::x86_64::__cpuid;
 
 use alloc::string::String;
 
-use crate::{display::framebuffer, memory::memmap, println};
+use crate::{
+    boot::info::{ENTRIES, FRAMEBUFFER},
+    println,
+};
 
 pub fn welcome() {
     println!("Welcome to Aether!\n");
@@ -23,10 +26,18 @@ pub fn welcome() {
     let brand = String::from_utf8_lossy(&bytes);
     println!("CPU: {brand}");
 
-    println!("Memory: {}MiB", memmap::size());
+    let mut memsize = 0usize;
+
+    for entry in *ENTRIES {
+        memsize += entry.length as usize;
+    }
+
+    memsize = memsize / 1024 / 1024;
+
+    println!("Memory: {}MiB", memsize);
 
     let (width, height) = {
-        let framebuffer = framebuffer().lock();
+        let framebuffer = FRAMEBUFFER.lock();
         (framebuffer.width(), framebuffer.height())
     };
 

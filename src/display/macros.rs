@@ -1,11 +1,9 @@
 use core::fmt::{Arguments, Write};
 
-use crate::display::{self};
+use crate::boot::info::FRAMEBUFFER;
 
 pub fn _print(args: Arguments) {
-    let framebuffer = display::framebuffer();
-
-    if let Some(mut framebuffer) = framebuffer.try_lock() {
+    if let Some(mut framebuffer) = FRAMEBUFFER.try_lock() {
         let _ = framebuffer.write_fmt(args);
     }
 }

@@ -1,19 +1,15 @@
-use limine::request::ExecutableCmdlineRequest;
 use spin::lazylock::LazyLock;
 
-use crate::log::level::Level;
-
-static CMDLINE_REQUEST: ExecutableCmdlineRequest = ExecutableCmdlineRequest::new();
+use crate::{boot::info::CMDLINE, log::level::Level};
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
     let mut config = Config::default();
-    let Some(cmdline) = CMDLINE_REQUEST.response() else {
+    let cmdline = *CMDLINE;
+    if cmdline.is_empty() {
         return config;
-    };
+    }
 
-    let cmdline_str = cmdline.cmdline();
-
-    for arg in cmdline_str.split_whitespace() {
+    for arg in cmdline.split_whitespace() {
         if let Some(value) = arg.strip_prefix("log_level=") {
             match value {
                 "debug" => config.set_log_level(Level::Debug),

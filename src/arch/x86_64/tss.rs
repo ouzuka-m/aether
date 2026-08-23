@@ -9,7 +9,7 @@ use x86_64::{VirtAddr, structures::tss::TaskStateSegment};
 
 use crate::{
     arch::x86_64::stack::{self, Stack},
-    memory::address::ext::VirtExt,
+    memory::address::VirtExt,
 };
 
 pub static TASK_STATE_SEGMENT: LazyLock<TaskStateSegment> = LazyLock::new(|| {

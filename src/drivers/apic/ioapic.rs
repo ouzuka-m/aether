@@ -13,7 +13,7 @@ use crate::{
     arch::x86_64::idt::KEYBOARD_VECTOR,
     drivers::apic::lapic,
     info,
-    memory::address::ext::{PhysExt, VirtExt},
+    memory::address::{PhysExt, VirtExt},
 };
 
 /// Register Select offset relative to I/O APIC MMIO base.

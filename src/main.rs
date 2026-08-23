@@ -12,6 +12,7 @@
 extern crate alloc;
 
 mod arch;
+mod boot;
 mod config;
 mod display;
 mod drivers;
@@ -68,9 +69,6 @@ extern "C" fn _start() -> ! {
 
     // Initialize virtual file system (VFS)
     tarfs::init();
-
-    // Initialize kernel display
-    display::init();
 
     // Greet to the screen
     greet::welcome();

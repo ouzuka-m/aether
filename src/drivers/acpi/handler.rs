@@ -8,7 +8,7 @@ use core::ptr::NonNull;
 use acpi::{Handle, Handler, PciAddress, PhysicalMapping, aml::AmlError};
 use x86_64::PhysAddr;
 
-use crate::{debug, memory::address::ext::PhysExt};
+use crate::{debug, memory::address::PhysExt};
 
 macro_rules! stub_handler {
     ($($fn_name:ident ($($_:ident : $ty:ty),*) $(-> $ret:ty)? ;)*) => {

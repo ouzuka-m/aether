@@ -4,7 +4,11 @@ use alloc::vec::Vec;
 use limine::request::ModulesRequest;
 use spin::once::Once;
 
+use crate::boot::info::MODULES;
+
 const BLOCK: usize = 512;
+
+static TARFS: Once<Vec<Entry>> = Once::new();
 
 #[derive(Debug)]
 pub struct Entry<'a> {
@@ -13,17 +17,9 @@ pub struct Entry<'a> {
     data: &'a [u8],
 }
 
-static MODULES_REQUEST: ModulesRequest = ModulesRequest::new();
-
-static TARFS: Once<Vec<Entry>> = Once::new();
-
 pub fn init() {
-    let modules = MODULES_REQUEST
-        .response()
-        .expect("Failed to get module response from bootloader")
-        .modules();
-
-    let tarfs = modules
+    let tarfs = MODULES
+        .modules()
         .iter()
         .next()
         .expect("Module is empty, can't parse tar archive");

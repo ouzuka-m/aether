@@ -6,29 +6,21 @@
 pub mod handler;
 
 use crate::{
+    boot::info::RSDP,
     debug,
-    memory::address::ext::{PhysExt, VirtExt},
+    memory::address::{PhysExt, VirtExt},
 };
 
 use self::handler::AcpiHandler;
 
 use acpi::{AcpiTables, platform::AcpiPlatform};
-use limine::request::RsdpRequest;
-use x86_64::VirtAddr;
-
-static RSDP_REQUEST: RsdpRequest = RsdpRequest::new();
 
 /// Initializes the ACPI platform.
 ///
 /// # Panics
 /// Panics if the bootloader fails to return a valid RSDP response.
 pub fn init() -> AcpiPlatform<AcpiHandler> {
-    let rsdp_response = RSDP_REQUEST
-        .response()
-        .expect("Failed to receive RSDP response from bootloader");
-
-    // Get physical RSDP address
-    let rsdp_address = VirtAddr::new(rsdp_response.address as u64).to_phys();
+    let rsdp_address = RSDP.to_phys();
     debug!("RSDP table address: {:#x}", rsdp_address.as_u64());
 
     let tables = unsafe {
