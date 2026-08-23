@@ -111,7 +111,7 @@ fn panic(info: &PanicInfo) -> ! {
             location.column()
         );
     } else {
-        error!("{}\n\nKernel halted.", info.message(),);
+        error!("{}\n\nKernel halted.", info.message());
     }
 
     qemu::exit::failure();
