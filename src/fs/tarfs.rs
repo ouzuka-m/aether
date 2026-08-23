@@ -1,7 +1,6 @@
-#![allow(unused)]
+#![allow(dead_code)]
 
 use alloc::vec::Vec;
-use limine::request::ModulesRequest;
 use spin::once::Once;
 
 use crate::boot::info::MODULES;

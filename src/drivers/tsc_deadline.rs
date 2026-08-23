@@ -39,7 +39,7 @@ pub fn arm(ms: u64) {
     wrmsr(deadline);
 }
 
-#[allow(unused)]
+#[allow(dead_code)]
 pub fn disarm() {
     wrmsr(0);
 }
@@ -48,11 +48,11 @@ pub fn wrmsr(value: u64) {
     unsafe { Msr::new(IA32).write(value) };
 }
 
-pub fn supports() -> bool {
-    let cpuid = __cpuid(1);
-    (cpuid.ecx & (1 << 24)) != 0
-}
-
 pub fn ticks_per_ms() -> u64 {
     *TICKS_PER_MS.get().expect("Ticks per MS haven't calculated")
+}
+
+fn supports() -> bool {
+    let cpuid = __cpuid(1);
+    (cpuid.ecx & (1 << 24)) != 0
 }
