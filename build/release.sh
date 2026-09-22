@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -e
 
@@ -16,6 +16,8 @@ if ! command -v xorriso >/dev/null 2>&1; then
     echo "error: xorriso is not installed or not available in PATH" >&2
     exit 1
 fi
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 tar -cf iso/boot/initramfs.tar rootfs/*
 
