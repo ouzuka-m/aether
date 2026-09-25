@@ -78,6 +78,8 @@ extern "C" fn _start() -> ! {
 
     qemu::exit::success();
 
+    prompt!();
+
     // Enable CPU interrupts and enter low-power idle loop
     loop {
         // Re-enable interrupts and halt CPU until next hardware interrupt arrives

@@ -6,14 +6,19 @@
 
 use core::sync::atomic::{AtomicU64, Ordering};
 
+use alloc::string::String;
 use pc_keyboard::DecodedKey;
+use spin::mutex::Mutex;
 use x86_64::structures::idt::InterruptStackFrame;
 
 use crate::{
+    arch::x86_64::idt::READ_COMMAND_VECTOR,
     debug,
     drivers::{apic::lapic, input::ps2_keyboard, tsc_deadline},
-    warn,
+    print, warn,
 };
+
+pub static INPUT_BUFFER: Mutex<String> = Mutex::new(String::new());
 
 static TICK: AtomicU64 = AtomicU64::new(0);
 
@@ -52,7 +57,35 @@ pub extern "x86-interrupt" fn keyboard(_: InterruptStackFrame) {
     let scancode = ps2_keyboard::read();
     if let Some(key) = ps2_keyboard::decode(scancode) {
         match key {
-            DecodedKey::Unicode(c) => debug!("Keyboard input char: {:?}", c),
+            DecodedKey::Unicode(c) => {
+                debug!("Keyboard input char: {:?}", c);
+
+                match c {
+                    '\u{8}' => {
+                        if INPUT_BUFFER.lock().pop().is_some() {
+                            print!(c);
+                        }
+                    }
+
+                    '\n' => {
+                        print!(c);
+
+                        unsafe {
+                            core::arch::asm!(
+                                "int {vector}",
+                                vector = const READ_COMMAND_VECTOR
+                            );
+                        }
+
+                        INPUT_BUFFER.lock().clear();
+                    }
+
+                    _ => {
+                        print!(c);
+                        INPUT_BUFFER.lock().push(c);
+                    }
+                }
+            }
             DecodedKey::RawKey(k) => debug!("Keyboard input raw key: {:?}", k),
         }
     }

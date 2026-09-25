@@ -10,6 +10,9 @@ pub fn _print(args: Arguments) {
 
 #[macro_export]
 macro_rules! print {
+    ($val:ident) => {
+        $crate::display::macros::_print(format_args!("{}", $val));
+    };
     ($($arg:tt)*) => {
         $crate::display::macros::_print(format_args!($($arg)*))
     };
@@ -17,7 +20,17 @@ macro_rules! print {
 
 #[macro_export]
 macro_rules! println {
+    ($val:ident) => {
+        $crate::print!("{}\n", $val);
+    };
     ($($arg:tt)*) => {
         $crate::print!("{}\n", format_args!($($arg)*))
+    };
+}
+
+#[macro_export]
+macro_rules! prompt {
+    () => {
+        $crate::print!("$ ");
     };
 }

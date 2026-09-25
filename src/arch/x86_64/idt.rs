@@ -2,7 +2,7 @@ use spin::lazylock::LazyLock;
 use x86_64::structures::idt::InterruptDescriptorTable;
 
 use crate::arch::x86_64::{
-    interrupts::{exceptions, hardware},
+    interrupts::{exceptions, hardware, software},
     stack,
 };
 
@@ -14,6 +14,8 @@ pub const TIMER_VECTOR: u8 = 0x20; // 32
 
 /// Interrupt vector index for PS/2 Keyboard interrupts.
 pub const KEYBOARD_VECTOR: u8 = 0x21; // 33
+
+pub const READ_COMMAND_VECTOR: u8 = 0x30; // 48
 
 static INTERRUPT_DESCRIPTOR_TABLE: LazyLock<InterruptDescriptorTable> = LazyLock::new(|| {
     let mut idt = InterruptDescriptorTable::new();
@@ -59,9 +61,13 @@ static INTERRUPT_DESCRIPTOR_TABLE: LazyLock<InterruptDescriptorTable> = LazyLock
         .set_handler_fn(exceptions::security_exception); // Vector 30
 
     // Hardware interrupts
-    idt[TIMER_VECTOR].set_handler_fn(hardware::timer);
-    idt[KEYBOARD_VECTOR].set_handler_fn(hardware::keyboard);
-    idt[SVR_VECTOR].set_handler_fn(hardware::spurious_vector_interrupt);
+    idt[TIMER_VECTOR].set_handler_fn(hardware::timer); // Vector 32
+    idt[KEYBOARD_VECTOR].set_handler_fn(hardware::keyboard); // Vector 33
+
+    // Software interrupts
+    idt[READ_COMMAND_VECTOR].set_handler_fn(software::read_command); // Vector 48
+
+    idt[SVR_VECTOR].set_handler_fn(hardware::spurious_vector_interrupt); // Vector 255
 
     // Need to switch to a different stack for some interrupts
     unsafe {
