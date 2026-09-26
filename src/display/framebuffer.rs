@@ -1,6 +1,5 @@
-use core::fmt::{Result, Write};
-
 use alloc::vec::Vec;
+use core::fmt::{Result, Write};
 
 use crate::display::{cell::Cell, font};
 
@@ -43,12 +42,14 @@ impl FrameBuffer {
 
         self.cursor_x = 0;
 
-        if self.cursor_y + font::SIZE.val() >= self.height {
+        let raster_h = font::SIZE.val();
+
+        if self.cursor_y + raster_h >= self.height {
             self.scroll_up();
             return;
         }
 
-        self.cursor_y += font::SIZE.val();
+        self.cursor_y += raster_h;
     }
 
     fn backspace(&mut self) {
