@@ -42,6 +42,12 @@ impl FrameBuffer {
         self.cells.clear();
 
         self.cursor_x = 0;
+
+        if self.cursor_y + font::SIZE.val() >= self.height {
+            self.scroll_up();
+            return;
+        }
+
         self.cursor_y += font::SIZE.val();
     }
 
@@ -56,9 +62,30 @@ impl FrameBuffer {
         for y in cell.start_y()..cell.start_y() + font::SIZE.val() {
             for x in cell.start_x()..cell.start_x() + cell.width() {
                 if x < self.width && y < self.height {
-                    self.put_pixel(x, y, 0x000000);
+                    self.put_pixel(x, y, 0);
                 }
             }
+        }
+    }
+
+    fn scroll_up(&mut self) {
+        let raster_h = font::SIZE.val();
+
+        let scroll_pixels = raster_h * self.stride;
+        let total_pixels = self.stride * self.height;
+
+        unsafe {
+            core::ptr::copy(
+                self.address.add(scroll_pixels),
+                self.address,
+                total_pixels - scroll_pixels,
+            );
+
+            core::ptr::write_bytes(
+                self.address.add(total_pixels - scroll_pixels),
+                0,
+                scroll_pixels,
+            );
         }
     }
 
