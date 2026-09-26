@@ -1,3 +1,9 @@
+//! Framebuffer text renderer.
+//!
+//! Provides a [`FrameBuffer`] type that owns a pointer to the linear
+//! framebuffer, tracks cursor state, and implements [`core::fmt::Write`]
+//! for formatted text output with automatic line wrapping and scrolling.
+
 use alloc::vec::Vec;
 use core::fmt::{Result, Write};
 
@@ -13,6 +19,8 @@ pub struct FrameBuffer {
     cells: Vec<Cell>,
 }
 
+// SAFETY: FrameBuffer is only accessed through a Mutex<FrameBuffer> (FRAMEBUFFER
+// static in boot::info), which serializes all reads and writes to the raw pointer.
 unsafe impl Sync for FrameBuffer {}
 unsafe impl Send for FrameBuffer {}
 
@@ -75,6 +83,9 @@ impl FrameBuffer {
         let scroll_pixels = raster_h * self.stride;
         let total_pixels = self.stride * self.height;
 
+        // SAFETY: The framebuffer address and stride are provided by the
+        // bootloader and remain valid for the kernel's lifetime. The copy
+        // region is within bounds (total_pixels covers the entire buffer).
         unsafe {
             core::ptr::copy(
                 self.address.add(scroll_pixels),
@@ -91,6 +102,9 @@ impl FrameBuffer {
     }
 
     fn put_pixel(&self, x: usize, y: usize, color: u32) {
+        // SAFETY: Callers bounds-check x < width and y < height before
+        // invoking put_pixel, so the computed offset stays within the
+        // framebuffer memory region.
         unsafe { *self.address.add(y * self.stride + x) = color }
     }
 }

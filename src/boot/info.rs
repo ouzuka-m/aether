@@ -1,3 +1,10 @@
+//! Boot information accessors.
+//!
+//! Lazily-initialized statics that extract and cache responses from the
+//! Limine boot protocol requests, providing ergonomic kernel-wide access
+//! to physical memory layout, HHDM offset, RSDP, framebuffer, loaded
+//! modules, and the kernel command line.
+
 use limine::{
     memmap::Entry,
     request::{ModulesRespData, Response},

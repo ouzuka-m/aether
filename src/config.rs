@@ -1,3 +1,8 @@
+//! Kernel runtime configuration.
+//!
+//! Parses the kernel command line (supplied by the bootloader) to
+//! extract configuration parameters such as the log verbosity level.
+
 use spin::lazylock::LazyLock;
 
 use crate::{boot::info::CMDLINE, log::level::Level};

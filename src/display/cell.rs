@@ -1,3 +1,12 @@
+//! Character cell tracking for the framebuffer.
+//!
+//! Each [`Cell`] records the screen position and width of a rendered glyph,
+//! enabling the backspace operation to erase the correct pixel region.
+
+/// A rendered character cell in the framebuffer.
+///
+/// Stores the top-left origin and pixel width of a single glyph so that
+/// the display subsystem can locate and clear it on backspace.
 #[derive(Debug)]
 pub struct Cell {
     start_x: usize,

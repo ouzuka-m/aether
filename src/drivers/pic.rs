@@ -26,6 +26,9 @@ pub fn disable() {
     let mut master: Port<u8> = Port::new(MASTER_PIC_IMR);
     let mut slave: Port<u8> = Port::new(SLAVE_PIC_IMR);
 
+    // SAFETY: Ports 0x21 and 0xA1 are the standard 8259 PIC IMR ports.
+    // Writing 0xFF masks all 16 IRQ lines, which is safe because we are
+    // transitioning to APIC-based interrupt routing.
     unsafe {
         master.write(0xFF);
         slave.write(0xFF);

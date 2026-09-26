@@ -1,3 +1,8 @@
+//! Global kernel heap allocator.
+//!
+//! Maps a contiguous range of virtual pages to physical frames and
+//! initialises a buddy-system allocator as the `#[global_allocator]`.
+
 use buddy_system_allocator::LockedHeap;
 use x86_64::{
     VirtAddr,
@@ -31,6 +36,9 @@ pub fn init(
             .allocate_frame()
             .expect("Failed to allocate frame");
         let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE | PageTableFlags::NO_EXECUTE;
+        // SAFETY: The page is in the dedicated heap virtual range and has
+        // not been previously mapped. The frame is freshly allocated and
+        // the flags grant read/write access with no-execute.
         unsafe {
             mapper
                 .map_to(page, frame, flags, frame_allocator)
@@ -39,6 +47,9 @@ pub fn init(
         }
     }
 
+    // SAFETY: The virtual address range [HEAP_START .. HEAP_START + HEAP_SIZE)
+    // has just been identity-mapped to valid physical frames above, so it is
+    // safe to hand this region to the buddy allocator.
     unsafe {
         ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
     }

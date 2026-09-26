@@ -1,3 +1,9 @@
+//! High Precision Event Timer (HPET) driver.
+//!
+//! Provides functions to initialise the HPET, read its main counter, and
+//! perform busy-wait delays with nanosecond and millisecond granularity.
+//! Used during TSC calibration and any early-boot timing requirements.
+
 use core::ptr;
 
 use acpi::HpetInfo;
@@ -13,6 +19,13 @@ const MAIN_COUNTER: u64 = 0x0F0;
 static BASE_ADDRESS: Once<VirtAddr> = Once::new();
 static PERIOD_FS: Once<u64> = Once::new();
 
+/// Initialises the HPET from ACPI-provided information.
+///
+/// Reads the counter tick period from the capability register, validates
+/// it, and enables the main counter.
+///
+/// # Panics
+/// Panics if the HPET counter tick period is zero or exceeds 100 ms.
 pub fn init(hpet_info: &HpetInfo) {
     let base_address = PhysAddr::new(hpet_info.base_address as u64).to_virt();
 
@@ -27,6 +40,8 @@ pub fn init(hpet_info: &HpetInfo) {
 
     // Enable CNF
     write(CONFIG, 0x1);
+
+    crate::info!("HPET initialized (period: {} fs)", period_fs);
 }
 
 pub fn wait_ns(ns: u64) {
@@ -47,20 +62,26 @@ pub fn counter() -> u64 {
     read(MAIN_COUNTER)
 }
 
+/// Reads a 64-bit value from an HPET MMIO register.
 fn read(offset: u64) -> u64 {
     let base_address = base_address();
+    // SAFETY: The base address is set from the ACPI HPET table during init
+    // and the register offsets are within the HPET MMIO region.
     unsafe { ptr::read_volatile(base_address.offset(offset).as_ptr::<u64>()) }
 }
 
+/// Writes a 64-bit value to an HPET MMIO register.
 fn write(offset: u64, value: u64) {
     let base_address = base_address();
+    // SAFETY: The base address is set from the ACPI HPET table during init
+    // and the register offsets are within the HPET MMIO region.
     unsafe { ptr::write_volatile(base_address.offset(offset).as_mut_ptr::<u64>(), value) }
 }
 
 fn base_address() -> VirtAddr {
     *BASE_ADDRESS
         .get()
-        .expect("HPET address hasn't bee initialized")
+        .expect("HPET address hasn't been initialized")
 }
 
 fn period_fs() -> u64 {

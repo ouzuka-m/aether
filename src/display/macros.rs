@@ -1,3 +1,8 @@
+//! Display output macros.
+//!
+//! Provides [`print!`], [`println!`], and [`prompt!`] macros that write
+//! formatted text to the global framebuffer.
+
 use core::fmt::{Arguments, Write};
 
 use crate::boot::info::FRAMEBUFFER;

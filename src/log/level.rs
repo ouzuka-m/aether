@@ -1,3 +1,7 @@
+//! Log severity levels.
+//!
+//! Defines the [`Level`] enum used to filter log output by severity.
+
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq)]
 pub enum Level {
     Debug = 0,

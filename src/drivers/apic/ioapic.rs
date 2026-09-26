@@ -74,6 +74,9 @@ fn read(reg: u32) -> u32 {
     let ioregsel: *mut u32 = base_address.offset(IOREGSEL).as_mut_ptr();
     let iowin: *const u32 = base_address.offset(IOWIN).as_ptr();
 
+    // SAFETY: The I/O APIC base address comes from the ACPI MADT and is
+    // mapped via the HHDM. IOREGSEL and IOWIN are at fixed offsets 0x00
+    // and 0x10 within the I/O APIC MMIO page.
     unsafe {
         ptr::write_volatile(ioregsel, reg);
         ptr::read_volatile(iowin)
@@ -89,6 +92,7 @@ fn write(reg: u32, value: u32) {
     let ioregsel: *mut u32 = (base_address + IOREGSEL).as_mut_ptr();
     let iowin: *mut u32 = (base_address + IOWIN).as_mut_ptr();
 
+    // SAFETY: Same as `read` — valid I/O APIC MMIO addresses via HHDM.
     unsafe {
         ptr::write_volatile(ioregsel, reg);
         ptr::write_volatile(iowin, value);

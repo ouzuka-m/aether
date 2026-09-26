@@ -79,17 +79,26 @@ pub fn id() -> u8 {
     (value >> 24) as u8
 }
 
+/// Configures a Local Vector Table (LVT) entry.
+///
+/// Writes `flags | vector` to the specified LVT register offset.
 pub fn configure_lvt(reg: u64, vector: u8, flags: u32) {
     write(reg, flags | vector as u32);
 }
 
+/// Reads a 32-bit value from a Local APIC MMIO register.
 fn read(offset: u64) -> u32 {
     let base_address = base_address();
+    // SAFETY: The base address originates from the ACPI MADT table and
+    // is translated to a valid virtual address via the HHDM. The offsets
+    // are well-known LAPIC register offsets within the 4 KiB MMIO page.
     unsafe { ptr::read_volatile(base_address.offset(offset).as_ptr::<u32>()) }
 }
 
+/// Writes a 32-bit value to a Local APIC MMIO register.
 fn write(offset: u64, value: u32) {
     let base_address = base_address();
+    // SAFETY: Same as `read` — valid LAPIC MMIO region via HHDM.
     unsafe {
         ptr::write_volatile(base_address.offset(offset).as_mut_ptr::<u32>(), value);
     }

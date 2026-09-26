@@ -1,3 +1,8 @@
+//! Welcome screen.
+//!
+//! Prints system information (CPU brand string, total RAM, framebuffer
+//! resolution) to the framebuffer on boot.
+
 use core::arch::x86_64::__cpuid;
 
 use alloc::string::String;
@@ -13,6 +18,8 @@ pub fn welcome() {
     let mut bytes = [0u8; 48];
 
     for i in 0..3 {
+        // SAFETY: CPUID leaves 0x80000002–0x80000004 are guaranteed to
+        // exist on all 64-bit x86 CPUs and return the processor brand string.
         let r = __cpuid(0x80000002 + i);
 
         let offset = i as usize * 16;

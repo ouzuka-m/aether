@@ -66,13 +66,12 @@ pub fn init() {
 
     // Load GDT pointer into CPU descriptor register (GDTR)
     gdt.load();
+    // SAFETY: The segment selectors were just created from valid GDT
+    // descriptors that we built and loaded above. Reloading CS, SS,
+    // and TR with these selectors is required after loading a new GDT.
     unsafe {
-        // Reload Code Segment (CS) register
         CS::set_reg(selectors.kernel_code);
-        // Reload Stack Segment (SS) register
         SS::set_reg(selectors.kernel_data);
-
-        // Load Task Register (TR) with TSS segment selector
         tables::load_tss(selectors.tss);
     }
 

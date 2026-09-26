@@ -1,3 +1,9 @@
+//! Kernel logging infrastructure.
+//!
+//! Provides the internal [`_log`] function and the public [`debug!`],
+//! [`info!`], [`warn!`], and [`error!`] macros that write timestamped,
+//! level-tagged messages to the UART serial port.
+
 use core::fmt::{Arguments, Write};
 use x86_64::instructions::interrupts;
 
@@ -9,6 +15,9 @@ pub fn _log(level: Level, args: Arguments) {
         return;
     }
 
+    // SAFETY: _rdtsc reads the Time Stamp Counter, a monotonically
+    // increasing counter available on all x86_64 CPUs. It is a
+    // non-destructive, side-effect-free operation.
     let timestamp = unsafe { core::arch::x86_64::_rdtsc() };
     let args = format_args!("[{}] [{}] {}\n", timestamp, level.as_str(), args);
 

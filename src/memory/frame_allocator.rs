@@ -1,3 +1,8 @@
+//! Physical frame allocator.
+//!
+//! Implements a simple bump allocator that walks the bootloader-provided
+//! memory map and hands out 4 KiB physical frames from usable regions.
+
 use limine::memmap::{Entry, MEMMAP_USABLE};
 use x86_64::{
     PhysAddr,
@@ -6,6 +11,10 @@ use x86_64::{
 
 use crate::boot::info::ENTRIES;
 
+/// Bump-style physical frame allocator.
+///
+/// Iterates through the bootloader memory map entries, skipping non-usable
+/// regions, and linearly allocates 4 KiB frames from each usable entry.
 pub struct PhysFrameAllocator {
     entries: &'static [&'static Entry],
     current_entry: usize,
@@ -38,7 +47,10 @@ unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
     }
 }
 
+/// Creates a new [`PhysFrameAllocator`] seeded with the bootloader memory map.
 pub fn init() -> PhysFrameAllocator {
+    crate::info!("Physical frame allocator initialized");
+
     PhysFrameAllocator {
         entries: *ENTRIES,
         current_entry: 0,

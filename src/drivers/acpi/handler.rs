@@ -48,6 +48,10 @@ impl Handler for AcpiHandler {
 
         let ptr: *mut T = virt_addr.as_mut_ptr();
 
+        // SAFETY: The physical address is translated through the HHDM,
+        // which the bootloader guarantees maps all physical memory. The
+        // pointer is non-null (enforced by the expect below) and the
+        // region is valid for `size` bytes.
         PhysicalMapping {
             physical_start: physical_address,
             virtual_start: NonNull::new(ptr).expect("virtual address pointer cannot be null"),

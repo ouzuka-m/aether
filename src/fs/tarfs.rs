@@ -1,3 +1,9 @@
+//! Tar archive filesystem (TarFS).
+//!
+//! Parses a USTAR-format tar archive loaded as a Limine boot module
+//! and provides simple path-based file lookup. Used to load the initial
+//! root filesystem (`initramfs.tar`) at boot.
+
 #![allow(dead_code)]
 
 use alloc::vec::Vec;
@@ -16,6 +22,10 @@ pub struct Entry<'a> {
     data: &'a [u8],
 }
 
+/// Parses the first boot module as a tar archive and stores the entries.
+///
+/// # Panics
+/// Panics if no boot module is available.
 pub fn init() {
     let tarfs = MODULES
         .modules()
@@ -25,18 +35,23 @@ pub fn init() {
 
     let entries = parse(tarfs.data());
 
+    crate::info!("TarFS initialized ({} entries)", entries.len());
+
     TARFS.call_once(|| entries);
 }
 
+/// Opens a file by path, returning a reference to its [`Entry`] if found.
 pub fn open<'a>(path: &str) -> Option<&'a Entry<'a>> {
     let tarfs = tarfs();
     tarfs.iter().find(|entry| entry.name == path)
 }
 
+/// Returns the raw byte contents of a tar entry.
 pub fn read<'a>(entry: &'a Entry<'a>) -> &'a [u8] {
     entry.data
 }
 
+/// Parses a raw byte slice as a USTAR tar archive into a list of entries.
 fn parse(data: &[u8]) -> Vec<Entry<'_>> {
     let mut offset = 0usize;
     let mut entries = Vec::new();

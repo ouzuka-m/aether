@@ -70,6 +70,9 @@ pub extern "x86-interrupt" fn keyboard(_: InterruptStackFrame) {
                     '\n' => {
                         print!(c);
 
+                        // SAFETY: INT 0x30 triggers the read_command software
+                        // interrupt handler registered in the IDT. The handler
+                        // only prints a prompt and sends EOI.
                         unsafe {
                             core::arch::asm!(
                                 "int {vector}",

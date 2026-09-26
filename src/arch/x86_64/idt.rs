@@ -1,3 +1,9 @@
+//! Interrupt Descriptor Table (IDT) configuration.
+//!
+//! Builds and loads the IDT, mapping CPU exception vectors, hardware
+//! IRQ vectors (timer, keyboard), and software interrupt vectors to
+//! their respective handler functions.
+
 use spin::lazylock::LazyLock;
 use x86_64::structures::idt::InterruptDescriptorTable;
 
@@ -69,7 +75,10 @@ static INTERRUPT_DESCRIPTOR_TABLE: LazyLock<InterruptDescriptorTable> = LazyLock
 
     idt[SVR_VECTOR].set_handler_fn(hardware::spurious_vector_interrupt); // Vector 255
 
-    // Need to switch to a different stack for some interrupts
+    // SAFETY: The IST indices (DF_INDEX, NMI_INDEX, MCE_INDEX) correspond
+    // to dedicated stacks configured in the TSS. Using a separate stack
+    // prevents these critical exceptions from cascading into a triple fault
+    // if the original kernel stack is corrupted or exhausted.
     unsafe {
         idt.double_fault
             .set_handler_fn(exceptions::double_fault)
@@ -87,6 +96,7 @@ static INTERRUPT_DESCRIPTOR_TABLE: LazyLock<InterruptDescriptorTable> = LazyLock
     idt
 });
 
+/// Loads the Interrupt Descriptor Table into the CPU.
 pub fn init() {
     INTERRUPT_DESCRIPTOR_TABLE.load();
     crate::info!("IDT loaded");
