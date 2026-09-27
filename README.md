@@ -104,6 +104,61 @@ qemu-system-x86_64 \
 > - Arch Linux — `/usr/share/edk2/x64/OVMF.fd`
 > - Ubuntu/Debian — `/usr/share/OVMF/OVMF_CODE.fd`
 
+## Kernel Boot Sequence
+
+Aether initializes its core subsystems in sequential phases starting from the Limine bootloader protocol up to the main interrupt-driven idle loop:
+
+```mermaid
+flowchart TD
+    subgraph Bootloader["Phase 0: Bootloader Hand-off (Limine)"]
+        L1["Firmware (BIOS/UEFI)"] --> L2["Limine Bootloader"]
+        L2 --> L3["Parse Kernel ELF & Process Limine Requests<br/>(HHDM, Memmap, RSDP, Framebuffer, Modules, Cmdline)"]
+        L3 --> L4["Setup Long Mode (x86_64) & Initial Page Tables"]
+        L4 --> Entry["Jump to _start() in src/main.rs"]
+    end
+
+    subgraph EarlyInit["Phase 1: Early Kernel & CPU Architecture"]
+        Entry --> CLI["Disable Interrupts (cli)"]
+        CLI --> UART["Init Serial Logging (COM1 0x3F8) via LazyLock"]
+        UART --> GDT["gdt::init()<br/>Load GDT & TSS (IST for DF, NMI, MCE)<br/>Reload CS, SS, TR"]
+        GDT --> IDT["idt::init()<br/>Load IDT (Vectors 0-30 Exceptions, Vector 32 Timer, 33 Keyboard, 255 SVR)"]
+    end
+
+    subgraph MemoryInit["Phase 2: Memory Management"]
+        IDT --> PTM["mapper::init()<br/>Read CR3 & create OffsetPageTable via HHDM"]
+        PTM --> PFA["frame_allocator::init()<br/>Build Bitmap Allocator from Limine memory map"]
+        PFA --> HEAP["heap_allocator::init()<br/>Allocate & map 1 MiB pages at 0xFFFF_9000_0000_0000<br/>Initialize Buddy Allocator (LockedHeap)"]
+    end
+
+    subgraph DriverInit["Phase 3: Drivers & Hardware Interrupt Routing"]
+        HEAP --> ACPI["acpi::init()<br/>Locate RSDP via HHDM & parse ACPI tables"]
+        ACPI --> PIC["pic::disable()<br/>Mask Intel 8259 PIC (Ports 0x21, 0xA1 = 0xFF)"]
+        PIC --> HPET["hpet::init()<br/>Map HPET MMIO & enable main counter"]
+        HPET --> LAPIC["lapic::init()<br/>Enable Local APIC & set SVR (Vector 0xFF)"]
+        LAPIC --> TSC["tsc_deadline::init()<br/>Calibrate TSC against HPET (10 ms)<br/>Configure LVT (Vector 32) & arm first tick"]
+        TSC --> IOAPIC["ioapic::init()<br/>Parse Interrupt Source Overrides<br/>Map PS/2 Keyboard (ISA IRQ 1 -> GSI -> Vector 33)"]
+    end
+
+    subgraph FSAndDisplay["Phase 4: Filesystem & Display"]
+        IOAPIC --> TARFS["tarfs::init()<br/>Parse initial USTAR tar module (initramfs)"]
+        TARFS --> GREET["greet::welcome()<br/>Read CPUID brand string & total RAM<br/>Draw banner to Framebuffer"]
+        GREET --> QEMU["qemu::exit::success()<br/>Write 0x00 to port 0xF4 (CI debug-exit hook)"]
+        QEMU --> PROMPT["prompt!()<br/>Print prompt ($) to screen"]
+    end
+
+    subgraph MainLoop["Phase 5: Runtime State"]
+        PROMPT --> LOOP["Idle Loop<br/>enable_and_hlt() (sti; hlt)<br/>Wait for Hardware IRQs (Timer, Keyboard)"]
+    end
+```
+
+### Boot Phases
+
+1. **Bootloader Hand-off (Limine)**: The firmware loads Limine, which fulfills the static requests in [`src/boot/requests.rs`](src/boot/requests.rs) (HHDM offset, memory map, RSDP, framebuffer, and boot modules), switches the CPU to 64-bit long mode, and jumps to `_start`.
+2. **Early CPU Architecture**: Disables CPU interrupts (`cli`), initializes COM1 UART serial output for logging, configures the Global Descriptor Table (GDT) and Task State Segment (TSS) with dedicated Interrupt Stack Table (IST) stacks, and loads the Interrupt Descriptor Table (IDT).
+3. **Memory Management**: Constructs the virtual memory page mapper via HHDM from `CR3`, builds a bitmap-based physical frame allocator from the memory map, maps 1 MiB of pages starting at `0xFFFF_9000_0000_0000`, and initializes the buddy heap allocator.
+4. **Drivers & Interrupt Routing**: Parses ACPI tables from RSDP, disables legacy 8259 PICs, initializes the High Precision Event Timer (HPET), enables the Local APIC, calibrates and arms the TSC-Deadline timer, and routes PS/2 keyboard IRQs through the I/O APIC.
+5. **Filesystem & Display**: Parses `initramfs.tar` (USTAR module) via TarFS, displays system hardware information and CPU brand on the framebuffer, triggers QEMU debug-exit (for automated CI testing), prints the prompt (`$ `), and enters an interrupt-driven `hlt` idle loop (`sti; hlt`).
+
 ## Directory Layout
 
 ```
