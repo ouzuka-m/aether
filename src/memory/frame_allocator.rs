@@ -1,7 +1,15 @@
-//! Physical frame allocator.
+//! # Physical Frame Allocator
 //!
-//! Implements a simple bump allocator that walks the bootloader-provided
-//! memory map and hands out 4 KiB physical frames from usable regions.
+//! Provides a bitmap-based physical memory frame allocator ([`PhysFrameAllocator`])
+//! that manages 4 KiB physical memory frames reported by the bootloader memory map.
+//!
+//! The allocator tracks the allocation state of each 4 KiB physical frame using
+//! a bitmap, where each bit represents a frame:
+//! - `0`: Free / usable frame.
+//! - `1`: Reserved, allocated, or unusable frame.
+//!
+//! It implements both [`FrameAllocator`] and [`FrameDeallocator`] from the `x86_64`
+//! crate to integrate with virtual memory paging subsystems.
 
 use limine::memmap::{Entry, MEMMAP_USABLE};
 use x86_64::{
@@ -11,14 +19,33 @@ use x86_64::{
 
 use crate::{boot::info::ENTRIES, memory::address::PhysExt};
 
+/// Size of a standard x86_64 physical memory frame in bytes (4 KiB).
 const FRAME_SIZE: usize = 4096;
 
+/// A bitmap-based 4 KiB physical frame allocator.
+///
+/// Tracks the availability of physical memory frames up to the highest physical
+/// memory address discovered in the bootloader's memory map.
+///
+/// A single bit in the bitmap corresponds to a single 4 KiB physical frame:
+/// a cleared bit (`0`) indicates a free frame, while a set bit (`1`) indicates
+/// that the frame is allocated, reserved, or invalid.
 #[derive(Debug)]
 pub struct PhysFrameAllocator {
+    /// Contiguous byte slice backing the frame allocation bitmap.
     bitmap: &'static mut [u8],
 }
 
 impl PhysFrameAllocator {
+    /// Constructs a new [`PhysFrameAllocator`] from the provided memory map entries.
+    ///
+    /// Locates a usable memory region to house the allocation bitmap, marks all
+    /// usable frames as free (`0`), and marks reserved regions as well as the
+    /// bitmap's own memory as allocated (`1`).
+    ///
+    /// # Panics
+    /// - Panics if no usable memory region is found in the memory map to place the bitmap.
+    /// - Panics if the memory map is empty.
     pub fn new(entries: &'static [&'static Entry]) -> Self {
         let (bitmap_addr, bitmap_base, bitmap_length) = {
             let entry = entries
@@ -39,12 +66,13 @@ impl PhysFrameAllocator {
             .max()
             .expect("Memory map is empty");
         let total_frames = (highest_addr as usize).div_ceil(FRAME_SIZE);
+        let bitmap_bytes = total_frames.div_ceil(8);
 
+        // SAFETY: The bitmap address is located within a validated usable memory region
+        // reported by the bootloader and translated via the Higher-Half Direct Mapping (HHDM).
+        // It is exclusively assigned to this allocator during kernel boot.
         let bitmap: &'static mut [u8] = unsafe {
-            &mut *core::ptr::slice_from_raw_parts_mut(
-                bitmap_addr.as_mut_ptr(),
-                total_frames.div_ceil(8),
-            )
+            &mut *core::ptr::slice_from_raw_parts_mut(bitmap_addr.as_mut_ptr(), bitmap_bytes)
         };
 
         bitmap.fill(0xFF);
@@ -75,11 +103,26 @@ impl PhysFrameAllocator {
             bitmap[byte] |= 1 << bit;
         }
 
+        crate::info!(
+            "Physical frame allocator initialized: {} frames tracked (bitmap: {} bytes at {:#x})",
+            total_frames,
+            bitmap_bytes,
+            bitmap_base,
+        );
+
         Self { bitmap }
     }
 }
 
+// SAFETY: `allocate_frame` only returns frames that are within valid usable memory
+// regions, marked as free (0) in the bitmap, and marks them as allocated (1) before
+// returning, guaranteeing that duplicate or invalid frames are never allocated.
 unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
+    /// Allocates the first available 4 KiB physical frame.
+    ///
+    /// Searches the bitmap for the first cleared bit (`0`), sets it to mark it
+    /// allocated (`1`), and returns the corresponding [`PhysFrame`]. Returns [`None`]
+    /// if no free frames remain.
     fn allocate_frame(&mut self) -> Option<PhysFrame<Size4KiB>> {
         for (idx, byte) in self.bitmap.iter_mut().enumerate() {
             if *byte == 0xFF {
@@ -102,6 +145,13 @@ unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
 }
 
 impl FrameDeallocator<Size4KiB> for PhysFrameAllocator {
+    /// Deallocates a previously allocated 4 KiB physical frame.
+    ///
+    /// Clears the corresponding bit in the bitmap to mark the frame as free.
+    ///
+    /// # Safety
+    /// The caller must ensure that the given `frame` was previously allocated by this
+    /// allocator and is no longer referenced anywhere in the system.
     unsafe fn deallocate_frame(&mut self, frame: PhysFrame<Size4KiB>) {
         let frame = frame.start_address().as_usize() / FRAME_SIZE;
 
@@ -112,9 +162,7 @@ impl FrameDeallocator<Size4KiB> for PhysFrameAllocator {
     }
 }
 
-/// Creates a new [`PhysFrameAllocator`] seeded with the bootloader memory map.
+/// Initializes the global physical frame allocator using the bootloader memory map.
 pub fn init() -> PhysFrameAllocator {
-    crate::info!("Physical frame allocator initialized");
-
     PhysFrameAllocator::new(*ENTRIES)
 }
