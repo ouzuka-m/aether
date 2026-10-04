@@ -21,15 +21,18 @@ mod fs;
 mod log;
 mod memory;
 mod qemu;
+mod scheduler;
 
 use core::panic::PanicInfo;
 use x86_64::instructions;
+
+use crate::boot::info;
 
 use self::{
     arch::x86_64::{gdt, idt},
     display::greet,
     fs::tarfs,
-    memory::{frame_allocator, heap_allocator, mapper},
+    memory::heap_allocator,
 };
 
 /// Kernel entry point called by the Limine bootloader.
@@ -58,12 +61,8 @@ extern "C" fn _start() -> ! {
     // Load Interrupt Descriptor Table (IDT) with exception & IRQ handlers
     idt::init();
 
-    // Initialize virtual memory mapper and physical frame allocator
-    let mut mapper = mapper::init();
-    let mut frame_allocator = frame_allocator::init();
-
     // Set up the global buddy system heap allocator
-    heap_allocator::init(&mut mapper, &mut frame_allocator);
+    heap_allocator::init();
 
     // Initialize all subsystems
     drivers::init();

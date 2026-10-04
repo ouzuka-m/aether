@@ -9,7 +9,7 @@ use x86_64::structures::idt::InterruptDescriptorTable;
 
 use crate::arch::x86_64::{
     interrupts::{exceptions, hardware, software},
-    stack,
+    ist,
 };
 
 /// Interrupt vector index for Spurious Vector Interrupts (SVR).
@@ -82,15 +82,15 @@ static INTERRUPT_DESCRIPTOR_TABLE: LazyLock<InterruptDescriptorTable> = LazyLock
     unsafe {
         idt.double_fault
             .set_handler_fn(exceptions::double_fault)
-            .set_stack_index(stack::DF_INDEX); // Vector 8
+            .set_stack_index(ist::DF_INDEX); // Vector 8
 
         idt.non_maskable_interrupt
             .set_handler_fn(exceptions::non_maskable_interrupt)
-            .set_stack_index(stack::NMI_INDEX); // Vector 2
+            .set_stack_index(ist::NMI_INDEX); // Vector 2
 
         idt.machine_check
             .set_handler_fn(exceptions::machine_check_exception)
-            .set_stack_index(stack::MCE_INDEX); // Vector 18
+            .set_stack_index(ist::MCE_INDEX); // Vector 18
     }
 
     idt

@@ -11,16 +11,83 @@
 //! It implements both [`FrameAllocator`] and [`FrameDeallocator`] from the `x86_64`
 //! crate to integrate with virtual memory paging subsystems.
 
-use limine::memmap::{Entry, MEMMAP_USABLE};
+use limine::memmap::MEMMAP_USABLE;
+use spin::{lazylock::LazyLock, mutex::Mutex};
 use x86_64::{
     PhysAddr,
-    structures::paging::{FrameAllocator, FrameDeallocator, PhysFrame, Size4KiB},
+    structures::paging::{FrameAllocator, FrameDeallocator, PageSize, PhysFrame, Size4KiB},
 };
 
 use crate::{boot::info::ENTRIES, memory::address::PhysExt};
 
-/// Size of a standard x86_64 physical memory frame in bytes (4 KiB).
-const FRAME_SIZE: usize = 4096;
+pub static FRAME_ALLOCATOR: LazyLock<Mutex<BitmapAllocator>> = LazyLock::new(|| {
+    let entries = *ENTRIES;
+
+    let (bitmap_addr, bitmap_base, bitmap_length) = {
+        let entry = entries
+            .iter()
+            .find(|e| e.type_ == MEMMAP_USABLE)
+            .expect("No usable memory region found in memory map");
+
+        (
+            PhysAddr::new(entry.base).to_virt(),
+            entry.base,
+            entry.length,
+        )
+    };
+
+    let highest_addr = entries
+        .iter()
+        .map(|e| e.base + e.length)
+        .max()
+        .expect("Memory map is empty");
+    let total_frames = (highest_addr).div_ceil(Size4KiB::SIZE) as usize;
+    let bitmap_bytes = total_frames.div_ceil(8);
+
+    // SAFETY: The bitmap address is located within a validated usable memory region
+    // reported by the bootloader and translated via the Higher-Half Direct Mapping (HHDM).
+    // It is exclusively assigned to this allocator during kernel boot.
+    let bitmap: &'static mut [u8] = unsafe {
+        &mut *core::ptr::slice_from_raw_parts_mut(bitmap_addr.as_mut_ptr(), bitmap_bytes)
+    };
+
+    bitmap.fill(0xFF);
+
+    for entry in entries {
+        if entry.type_ != MEMMAP_USABLE {
+            continue;
+        }
+
+        let start_frame = (entry.base / Size4KiB::SIZE) as usize;
+        let end_frame = ((entry.base + entry.length) / Size4KiB::SIZE) as usize;
+
+        for frame in start_frame..end_frame {
+            let byte = frame / 8;
+            let bit = frame % 8;
+
+            bitmap[byte] &= !(1 << bit);
+        }
+    }
+
+    let start_frame = (bitmap_base / Size4KiB::SIZE) as usize;
+    let end_frame = ((bitmap_base + bitmap_length) / Size4KiB::SIZE) as usize;
+
+    for frame in start_frame..end_frame {
+        let byte = frame / 8;
+        let bit = frame % 8;
+
+        bitmap[byte] |= 1 << bit;
+    }
+
+    crate::info!(
+        "Physical frame allocator initialized: {} frames tracked (bitmap: {} bytes at {:#x})",
+        total_frames,
+        bitmap_bytes,
+        bitmap_base,
+    );
+
+    Mutex::new(BitmapAllocator { bitmap })
+});
 
 /// A bitmap-based 4 KiB physical frame allocator.
 ///
@@ -31,93 +98,15 @@ const FRAME_SIZE: usize = 4096;
 /// a cleared bit (`0`) indicates a free frame, while a set bit (`1`) indicates
 /// that the frame is allocated, reserved, or invalid.
 #[derive(Debug)]
-pub struct PhysFrameAllocator {
+pub struct BitmapAllocator {
     /// Contiguous byte slice backing the frame allocation bitmap.
     bitmap: &'static mut [u8],
-}
-
-impl PhysFrameAllocator {
-    /// Constructs a new [`PhysFrameAllocator`] from the provided memory map entries.
-    ///
-    /// Locates a usable memory region to house the allocation bitmap, marks all
-    /// usable frames as free (`0`), and marks reserved regions as well as the
-    /// bitmap's own memory as allocated (`1`).
-    ///
-    /// # Panics
-    /// - Panics if no usable memory region is found in the memory map to place the bitmap.
-    /// - Panics if the memory map is empty.
-    pub fn new(entries: &'static [&'static Entry]) -> Self {
-        let (bitmap_addr, bitmap_base, bitmap_length) = {
-            let entry = entries
-                .iter()
-                .find(|e| e.type_ == MEMMAP_USABLE)
-                .expect("No usable memory region found in memory map");
-
-            (
-                PhysAddr::new(entry.base).to_virt(),
-                entry.base,
-                entry.length,
-            )
-        };
-
-        let highest_addr = entries
-            .iter()
-            .map(|e| e.base + e.length)
-            .max()
-            .expect("Memory map is empty");
-        let total_frames = (highest_addr as usize).div_ceil(FRAME_SIZE);
-        let bitmap_bytes = total_frames.div_ceil(8);
-
-        // SAFETY: The bitmap address is located within a validated usable memory region
-        // reported by the bootloader and translated via the Higher-Half Direct Mapping (HHDM).
-        // It is exclusively assigned to this allocator during kernel boot.
-        let bitmap: &'static mut [u8] = unsafe {
-            &mut *core::ptr::slice_from_raw_parts_mut(bitmap_addr.as_mut_ptr(), bitmap_bytes)
-        };
-
-        bitmap.fill(0xFF);
-
-        for entry in entries {
-            if entry.type_ != MEMMAP_USABLE {
-                continue;
-            }
-
-            let start_frame = entry.base as usize / FRAME_SIZE;
-            let end_frame = (entry.base + entry.length) as usize / FRAME_SIZE;
-
-            for frame in start_frame..end_frame {
-                let byte = frame / 8;
-                let bit = frame % 8;
-
-                bitmap[byte] &= !(1 << bit);
-            }
-        }
-
-        let start_frame = bitmap_base as usize / FRAME_SIZE;
-        let end_frame = (bitmap_base + bitmap_length) as usize / FRAME_SIZE;
-
-        for frame in start_frame..end_frame {
-            let byte = frame / 8;
-            let bit = frame % 8;
-
-            bitmap[byte] |= 1 << bit;
-        }
-
-        crate::info!(
-            "Physical frame allocator initialized: {} frames tracked (bitmap: {} bytes at {:#x})",
-            total_frames,
-            bitmap_bytes,
-            bitmap_base,
-        );
-
-        Self { bitmap }
-    }
 }
 
 // SAFETY: `allocate_frame` only returns frames that are within valid usable memory
 // regions, marked as free (0) in the bitmap, and marks them as allocated (1) before
 // returning, guaranteeing that duplicate or invalid frames are never allocated.
-unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
+unsafe impl FrameAllocator<Size4KiB> for BitmapAllocator {
     /// Allocates the first available 4 KiB physical frame.
     ///
     /// Searches the bitmap for the first cleared bit (`0`), sets it to mark it
@@ -136,7 +125,7 @@ unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
             let frame = idx * 8 + bit;
 
             return Some(PhysFrame::containing_address(PhysAddr::new(
-                (frame * FRAME_SIZE) as u64,
+                (frame * Size4KiB::SIZE as usize) as u64,
             )));
         }
 
@@ -144,7 +133,7 @@ unsafe impl FrameAllocator<Size4KiB> for PhysFrameAllocator {
     }
 }
 
-impl FrameDeallocator<Size4KiB> for PhysFrameAllocator {
+impl FrameDeallocator<Size4KiB> for BitmapAllocator {
     /// Deallocates a previously allocated 4 KiB physical frame.
     ///
     /// Clears the corresponding bit in the bitmap to mark the frame as free.
@@ -153,16 +142,11 @@ impl FrameDeallocator<Size4KiB> for PhysFrameAllocator {
     /// The caller must ensure that the given `frame` was previously allocated by this
     /// allocator and is no longer referenced anywhere in the system.
     unsafe fn deallocate_frame(&mut self, frame: PhysFrame<Size4KiB>) {
-        let frame = frame.start_address().as_usize() / FRAME_SIZE;
+        let frame = frame.start_address().as_usize() / Size4KiB::SIZE as usize;
 
         let byte = frame / 8;
         let bit = frame % 8;
 
         self.bitmap[byte] &= !(1 << bit);
     }
-}
-
-/// Initializes the global physical frame allocator using the bootloader memory map.
-pub fn init() -> PhysFrameAllocator {
-    PhysFrameAllocator::new(*ENTRIES)
 }

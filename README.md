@@ -125,8 +125,6 @@ flowchart TD
     end
 
     subgraph MemoryInit["Phase 2: Memory Management"]
-        IDT --> PTM["mapper::init()<br/>Read CR3 & create OffsetPageTable via HHDM"]
-        PTM --> PFA["frame_allocator::init()<br/>Build Bitmap Allocator from Limine memory map"]
         PFA --> HEAP["heap_allocator::init()<br/>Allocate & map 1 MiB pages at 0xFFFF_9000_0000_0000<br/>Initialize Buddy Allocator (LockedHeap)"]
     end
 

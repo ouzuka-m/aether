@@ -8,10 +8,7 @@ use x86_64::{registers::control::Cr3, structures::paging::OffsetPageTable};
 
 use crate::{boot::info::HHDM, memory::address::PhysExt};
 
-/// Initialises the kernel page-table mapper from the active CR3 register.
-pub fn init() -> OffsetPageTable<'static> {
-    crate::info!("Page table mapper initialized");
-
+pub fn current() -> OffsetPageTable<'static> {
     let (level_4_frame, _) = Cr3::read();
 
     let phys = level_4_frame.start_address();

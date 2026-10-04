@@ -9,16 +9,17 @@ use x86_64::{
     structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB},
 };
 
+use crate::memory::{frame_allocator::FRAME_ALLOCATOR, mapper};
+
 #[global_allocator]
 static ALLOCATOR: LockedHeap<33> = LockedHeap::empty();
 
 pub const HEAP_START: usize = 0xFFFF_9000_0000_0000;
 pub const HEAP_SIZE: usize = 1024 * 1024; // 1 MB, 256 pages
 
-pub fn init(
-    mapper: &mut impl Mapper<Size4KiB>,
-    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
-) {
+pub fn init() {
+    let mut mapper = mapper::current();
+
     let page_range = {
         let start = VirtAddr::new(HEAP_START as u64);
 
@@ -32,7 +33,8 @@ pub fn init(
     };
 
     for page in page_range {
-        let frame = frame_allocator
+        let frame = FRAME_ALLOCATOR
+            .lock()
             .allocate_frame()
             .expect("Failed to allocate frame");
         let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE | PageTableFlags::NO_EXECUTE;
@@ -41,7 +43,7 @@ pub fn init(
         // the flags grant read/write access with no-execute.
         unsafe {
             mapper
-                .map_to(page, frame, flags, frame_allocator)
+                .map_to(page, frame, flags, &mut *FRAME_ALLOCATOR.lock())
                 .expect("Failed to map page & frame")
                 .flush();
         }
