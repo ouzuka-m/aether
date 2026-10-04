@@ -173,6 +173,7 @@ aether/
 │   ├── log/          Kernel logging
 │   ├── memory/       Frame allocator, mapper, heap
 │   ├── qemu/         QEMU integration utilities
+│   ├── scheduler/    Scheduler and task management
 │   ├── config.rs     Kernel configuration
 │   └── main.rs       Kernel entry point
 ├── targets/        Custom target specification (x86_64-unknown-none.json)
