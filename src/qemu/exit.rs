@@ -7,6 +7,8 @@
 //!
 //! These functions are no-ops on real hardware (port `0xF4` is unused).
 
+use x86_64::instructions::port::Port;
+
 /// Signals successful execution to the QEMU debug-exit device.
 ///
 /// Writes `0x00` to I/O port `0xF4`, causing QEMU to exit with code `1`.
@@ -15,11 +17,7 @@ pub fn success() {
     // device. On real hardware this port is unused and the write is
     // harmless.
     unsafe {
-        core::arch::asm!(
-            "out dx, eax",
-            in("dx") 0xF4u16,
-            in("eax") 0x0u32
-        )
+        Port::new(0xF4).write(0x00u8);
     }
 }
 
@@ -29,10 +27,6 @@ pub fn success() {
 pub fn failure() {
     // SAFETY: Same as `success` — writing to the QEMU debug-exit port.
     unsafe {
-        core::arch::asm!(
-            "out dx, eax",
-            in("dx") 0xF4u16,
-            in("eax") 0x1u32
-        )
+        Port::new(0xF4).write(0x01u8);
     }
 }
