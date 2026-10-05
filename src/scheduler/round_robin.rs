@@ -1,6 +1,7 @@
 use alloc::collections::VecDeque;
 
 use spin::{lazylock::LazyLock, mutex::Mutex};
+use x86_64::instructions::interrupts;
 
 use crate::{
     memory,
@@ -67,6 +68,11 @@ impl RoundRobin {
         rsp -= 8;
         unsafe {
             *(rsp.as_mut_ptr()) = entry as usize;
+        }
+
+        rsp -= 8;
+        unsafe {
+            *(rsp.as_mut_ptr()) = (interrupts::enable as fn()) as usize;
         }
 
         let context = Context {

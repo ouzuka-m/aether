@@ -11,7 +11,6 @@ use x86_64::structures::idt::InterruptStackFrame;
 
 use crate::{
     arch::x86_64::idt::READ_COMMAND_VECTOR,
-    debug,
     drivers::{apic::lapic, input::ps2_keyboard, tsc_deadline},
     print, scheduler, warn,
 };
@@ -48,41 +47,38 @@ pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
 /// layout parser, logs the key, and issues an EOI to the Local APIC.
 pub extern "x86-interrupt" fn keyboard(_: InterruptStackFrame) {
     let scancode = ps2_keyboard::read();
-    if let Some(key) = ps2_keyboard::decode(scancode) {
-        match key {
-            DecodedKey::Unicode(c) => {
-                debug!("Keyboard input char: {:?}", c);
 
-                match c {
-                    '\u{8}' => {
-                        if INPUT_BUFFER.lock().pop().is_some() {
-                            print!(c);
-                        }
-                    }
-
-                    '\n' => {
-                        print!(c);
-
-                        // SAFETY: INT 0x30 triggers the read_command software
-                        // interrupt handler registered in the IDT. The handler
-                        // only prints a prompt and sends EOI.
-                        unsafe {
-                            core::arch::asm!(
-                                "int {vector}",
-                                vector = const READ_COMMAND_VECTOR
-                            );
-                        }
-
-                        INPUT_BUFFER.lock().clear();
-                    }
-
-                    _ => {
-                        print!(c);
-                        INPUT_BUFFER.lock().push(c);
-                    }
+    if let Some(key) = ps2_keyboard::decode(scancode)
+        && let DecodedKey::Unicode(c) = key
+    {
+        match c {
+            '\u{8}' => {
+                if INPUT_BUFFER.lock().pop().is_some() {
+                    print!(c);
                 }
             }
-            DecodedKey::RawKey(k) => debug!("Keyboard input raw key: {:?}", k),
+
+            '\n' => {
+                print!(c);
+
+                // SAFETY: INT 0x30 triggers the read_command software
+                // interrupt handler registered in the IDT. The handler
+                // only prints a prompt and sends EOI.
+                unsafe {
+                    core::arch::asm!(
+                        "int {vector}",
+                        vector = const READ_COMMAND_VECTOR
+                    );
+                }
+
+                INPUT_BUFFER.lock().clear();
+            }
+
+            _ => {
+                print!(c);
+
+                INPUT_BUFFER.lock().push(c);
+            }
         }
     }
 
