@@ -17,7 +17,8 @@ use crate::{
 const LVT: u64 = 0x320;
 const TSC_DEADLINE_MODE: u32 = 2 << 17;
 const CALIBRATION_MS: u64 = 10;
-const IA32: u32 = 0x6E0;
+
+const IA32_TSC_DEADLINE: u32 = 0x6E0;
 
 static TICKS_PER_MS: Once<u64> = Once::new();
 
@@ -60,10 +61,9 @@ pub fn arm(ms: u64) {
     wrmsr(deadline);
 }
 
-/// Disarms the TSC-Deadline timer by writing zero to the MSR.
-#[allow(dead_code)]
-pub fn disarm() {
-    wrmsr(0);
+/// Returns the calibrated TSC ticks-per-millisecond value.
+pub fn ticks_per_ms() -> u64 {
+    *TICKS_PER_MS.get().expect("Ticks per MS haven't calculated")
 }
 
 /// Writes a value to the IA32_TSC_DEADLINE MSR.
@@ -71,12 +71,7 @@ fn wrmsr(value: u64) {
     // SAFETY: Writing the IA32_TSC_DEADLINE MSR (0x6E0) programs the
     // next TSC-Deadline timer interrupt. The caller is responsible for
     // providing a valid future TSC value.
-    unsafe { Msr::new(IA32).write(value) };
-}
-
-/// Returns the calibrated TSC ticks-per-millisecond value.
-pub fn ticks_per_ms() -> u64 {
-    *TICKS_PER_MS.get().expect("Ticks per MS haven't calculated")
+    unsafe { Msr::new(IA32_TSC_DEADLINE).write(value) };
 }
 
 /// Checks whether the CPU supports TSC-Deadline mode (CPUID.01H:ECX bit 24).
