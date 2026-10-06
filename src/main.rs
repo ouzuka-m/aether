@@ -24,7 +24,7 @@ mod qemu;
 mod scheduler;
 
 use core::panic::PanicInfo;
-use x86_64::instructions;
+use x86_64::instructions::{self, interrupts};
 
 use crate::boot::info;
 
@@ -82,7 +82,7 @@ extern "C" fn _start() -> ! {
     // Enable CPU interrupts and enter low-power idle loop
     loop {
         // Re-enable interrupts and halt CPU until next hardware interrupt arrives
-        instructions::interrupts::enable_and_hlt();
+        interrupts::enable_and_hlt();
     }
 }
 
