@@ -11,7 +11,7 @@ categories = ["os", "no-std", "memory-management", "filesystem", "embedded"]
 
 [dependencies]
 limine = "0.6"
-x86_64 = { version = "0.15", default-features = false, features = ["instructions", "abi_x86_interrupt"] }
+x86_64 = { version = "0.15", default-features = false, features = ["instructions", "abi_x86_interrupt", "asm_const"] }
 spin = { version = "0.12", default-features = false, features = ["spin_mutex", "once", "lazylock"] }
 uart_16550 = "0.8"
 pc-keyboard = "0.9"

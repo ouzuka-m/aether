@@ -7,7 +7,7 @@
 use alloc::string::String;
 use pc_keyboard::DecodedKey;
 use spin::mutex::Mutex;
-use x86_64::structures::idt::InterruptStackFrame;
+use x86_64::{instructions::interrupts, structures::idt::InterruptStackFrame};
 
 use crate::{
     arch::x86_64::idt::READ_COMMAND_VECTOR,
@@ -65,10 +65,7 @@ pub extern "x86-interrupt" fn keyboard(_: InterruptStackFrame) {
                 // interrupt handler registered in the IDT. The handler
                 // only prints a prompt and sends EOI.
                 unsafe {
-                    core::arch::asm!(
-                        "int {vector}",
-                        vector = const READ_COMMAND_VECTOR
-                    );
+                    interrupts::software_interrupt::<READ_COMMAND_VECTOR>();
                 }
 
                 INPUT_BUFFER.lock().clear();
