@@ -48,8 +48,7 @@ jobs:
             -enable-kvm \
             -serial stdio \
             -display none \
-            -device isa-debug-exit,iobase=0xf4 \
-            | tee serial.log
+            -device isa-debug-exit,iobase=0xf4
 
           status=$?
 
@@ -60,9 +59,3 @@ jobs:
           fi
 
           exit "$status"
-
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: serial-log
-          path: serial.log
