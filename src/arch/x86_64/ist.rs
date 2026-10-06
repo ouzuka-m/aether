@@ -10,9 +10,9 @@ pub const STACK_SIZE: usize = 4096 * 8; // 32 KiB
 #[repr(C, align(16))]
 pub struct Stack([u8; STACK_SIZE]);
 
-pub static DF_STACK: Stack = Stack([0; STACK_SIZE]);
-pub static NMI_STACK: Stack = Stack([0; STACK_SIZE]);
-pub static MCE_STACK: Stack = Stack([0; STACK_SIZE]);
+pub static mut DF_STACK: Stack = Stack([0; STACK_SIZE]);
+pub static mut NMI_STACK: Stack = Stack([0; STACK_SIZE]);
+pub static mut MCE_STACK: Stack = Stack([0; STACK_SIZE]);
 
 /// IST index for the Double Fault (#DF) exception stack.
 pub const DF_INDEX: u16 = 0;
