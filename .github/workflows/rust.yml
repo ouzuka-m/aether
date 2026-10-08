@@ -28,7 +28,7 @@ jobs:
         run: cargo clippy -- -D warnings
 
       - name: Build
-        run: bash ./build/release.sh
+        run: bash ./scripts/build.sh release
 
       - name: Enable KVM group permissions
         run: |
