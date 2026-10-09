@@ -137,9 +137,22 @@ aether/
 └── rust-toolchain.toml  Pinned nightly Rust toolchain
 ```
 
-## Contributing
+## Contributing — We Need You!
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on code quality, toolchain management, and contribution workflow.
+Aether is an ambitious, experimental kernel under active development. Building an operating system from the ground up is a huge challenge, and **we need your help to make it rock solid**. Whether you are an experienced systems hacker or exploring OS development in Rust for the first time, there are plenty of high-impact areas where you can jump in right away:
+
+- **🧪 Testing & Hardware Verification**:
+  Aether does not have an automated test suite yet. You can help by running manual boot tests across diverse CPU and QEMU/KVM setups, testing both debug and release builds, monitoring serial output, and hunting down panics, freezes, or regressions.
+- **🛡️ Auditing & Safe Abstractions (`unsafe`)**:
+  Low-level hardware access inevitably requires `unsafe`, but we strive to keep it minimal. Help us audit raw pointers and MMIO/register accesses, wrap low-level routines into sound, idiomatic safe abstractions, and document safety invariants with `// SAFETY:` comments.
+- **📦 Dependency & Toolchain Maintenance**:
+  The Rust nightly ecosystem moves fast. We need contributors to track outdated dependencies (`cargo outdated`), test nightly compiler compatibility, and keep toolchain pins synchronized with CI.
+- **✨ Code Quality & Linting**:
+  We enforce a strict **zero-warnings, zero-errors** policy (`cargo clippy -- -D warnings`). Help polish existing code, adopt more idiomatic patterns, improve formatting (`cargo fmt`), and expand inline documentation.
+- **⚙️ Kernel Subsystem & Driver Expansion**:
+  Help advance Aether's core capabilities — including physical/virtual memory management, scheduling, filesystem features (beyond initramfs), interrupt controllers (APIC/HPET), and hardware drivers.
+
+Ready to contribute? Check out [CONTRIBUTING.md](CONTRIBUTING.md) for our detailed guidelines, code standards, and PR workflow.
 
 ## License
 
