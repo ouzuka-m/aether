@@ -26,8 +26,6 @@ mod scheduler;
 use core::panic::PanicInfo;
 use x86_64::instructions::{self, interrupts};
 
-use crate::boot::info;
-
 use self::{
     arch::x86_64::{gdt, idt},
     display::greet,
