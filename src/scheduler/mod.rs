@@ -24,10 +24,7 @@ pub static SCHEDULER: LazyLock<Mutex<RoundRobin>> = LazyLock::new(|| {
         *(rsp.as_mut_ptr()) = (idle::idle as fn() -> !) as usize;
     }
 
-    let context = Context {
-        rsp: rsp.as_u64(),
-        ..Default::default()
-    };
+    let context = Context::new_rsp(rsp.as_u64());
 
     let state = State::Ready;
 

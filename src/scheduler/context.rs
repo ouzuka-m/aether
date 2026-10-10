@@ -1,5 +1,5 @@
 #[repr(C)]
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct Context {
     pub r15: u64,
     pub r14: u64,
@@ -8,6 +8,20 @@ pub struct Context {
     pub rbx: u64,
     pub rbp: u64,
     pub rsp: u64,
+}
+
+impl Context {
+    pub const fn new_rsp(rsp: u64) -> Self {
+        Context {
+            r15: 0,
+            r14: 0,
+            r13: 0,
+            r12: 0,
+            rbx: 0,
+            rbp: 0,
+            rsp,
+        }
+    }
 }
 
 impl core::fmt::Debug for Context {
