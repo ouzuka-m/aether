@@ -53,12 +53,12 @@ Rust nightly is managed automatically via [`rust-toolchain.toml`](rust-toolchain
 
 ## Building
 
-Build scripts are located in the [`build/`](build/) directory.
+Build scripts are located in the [`scripts/`](scripts/) directory.
 
 ### Debug Build
 
 ```bash
-./build/debug.sh
+./scripts/build.sh debug
 ```
 
 Compiles the kernel in debug mode and creates `aether.iso`.
@@ -66,7 +66,7 @@ Compiles the kernel in debug mode and creates `aether.iso`.
 ### Release Build
 
 ```bash
-./build/release.sh
+./scripts/build.sh release
 ```
 
 Compiles the kernel with optimizations and creates `aether.iso`.
