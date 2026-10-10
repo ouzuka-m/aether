@@ -1,39 +1,11 @@
 use alloc::collections::VecDeque;
 
-use spin::{lazylock::LazyLock, mutex::Mutex};
 use x86_64::instructions::interrupts;
 
 use crate::{
     memory,
     scheduler::{self, context::Context, state::State, switch::Switch, task::Task},
 };
-
-pub static SCHEDULER: LazyLock<Mutex<RoundRobin>> = LazyLock::new(|| {
-    let mut tasks = VecDeque::with_capacity(5);
-
-    let stack = memory::stack::alloc_stack();
-    let mut rsp = stack.top;
-
-    rsp -= 8;
-    unsafe {
-        *(rsp.as_mut_ptr()) = (scheduler::idle::idle as fn() -> !) as usize;
-    }
-
-    let context = Context {
-        rsp: rsp.as_u64(),
-        ..Default::default()
-    };
-
-    let state = State::Ready;
-
-    tasks.push_back(Task {
-        state,
-        context,
-        stack,
-    });
-
-    Mutex::new(RoundRobin::new(tasks))
-});
 
 #[derive(Debug)]
 pub struct RoundRobin {

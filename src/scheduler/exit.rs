@@ -1,6 +1,6 @@
 use x86_64::instructions::interrupts;
 
-use crate::scheduler::round_robin::SCHEDULER;
+use crate::scheduler::SCHEDULER;
 
 pub fn exit() -> ! {
     interrupts::without_interrupts(|| {
