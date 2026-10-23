@@ -3,8 +3,10 @@
 //! Defines the default allocation size for kernel exception stacks and specifies
 //! the Interrupt Stack Table (IST) index mappings used by the TSS and IDT.
 
+use x86_64::structures::paging::{PageSize, Size4KiB};
+
 /// Size of each dedicated exception stack in bytes (8 KiB).
-pub const STACK_SIZE: usize = 4096 * 2; // 8 KiB
+pub const STACK_SIZE: usize = (Size4KiB::SIZE * 2) as usize; // 8 KiB
 
 /// Internal wrapper representing a 16-byte aligned stack memory buffer.
 #[repr(C, align(16))]
