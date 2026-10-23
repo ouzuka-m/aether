@@ -3,7 +3,7 @@ use alloc::collections::VecDeque;
 use x86_64::instructions::interrupts;
 
 use crate::{
-    memory,
+    memory::stack::Stack,
     scheduler::{self, context::Context, state::State, switch::Switch, task::Task},
 };
 
@@ -29,8 +29,8 @@ impl RoundRobin {
 
     #[allow(dead_code)]
     pub fn spawn(&mut self, entry: fn()) {
-        let stack = memory::stack::alloc_stack();
-        let mut rsp = stack.top;
+        let stack = Stack::alloc();
+        let mut rsp = stack.top();
 
         rsp -= 8;
         unsafe {

@@ -7,22 +7,32 @@ use crate::memory::{address::PhysExt, frame_allocator::FRAME_ALLOCATOR};
 
 #[derive(Debug)]
 pub struct Stack {
-    pub frame: PhysFrame,
-    pub top: VirtAddr,
+    frame: PhysFrame,
+    top: VirtAddr,
 }
 
-pub fn alloc_stack() -> Stack {
-    let frame = FRAME_ALLOCATOR
-        .lock()
-        .allocate_frame()
-        .expect("Failed to allocate stack frame");
+impl Stack {
+    pub fn alloc() -> Self {
+        let frame = FRAME_ALLOCATOR
+            .lock()
+            .allocate_frame()
+            .expect("Failed to allocate stack frame");
 
-    let top = frame.start_address().to_virt() + Size4KiB::SIZE;
+        let top = frame.start_address().to_virt() + Size4KiB::SIZE;
 
-    Stack { frame, top }
-}
+        Self { frame, top }
+    }
 
-#[allow(dead_code)]
-pub fn deallocate_stack(stack: Stack) {
-    unsafe { FRAME_ALLOCATOR.lock().deallocate_frame(stack.frame) };
+    #[allow(dead_code)]
+    pub fn deallocate(self) {
+        unsafe { FRAME_ALLOCATOR.lock().deallocate_frame(self.frame()) };
+    }
+
+    pub fn frame(&self) -> PhysFrame {
+        self.frame
+    }
+
+    pub fn top(&self) -> VirtAddr {
+        self.top
+    }
 }

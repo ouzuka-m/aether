@@ -11,13 +11,13 @@ use spin::{lazylock::LazyLock, mutex::Mutex};
 
 use self::{context::Context, round_robin::RoundRobin, state::State, switch::Switch, task::Task};
 
-use crate::memory;
+use crate::memory::stack::Stack;
 
 pub static SCHEDULER: LazyLock<Mutex<RoundRobin>> = LazyLock::new(|| {
     let mut tasks = VecDeque::with_capacity(5);
 
-    let stack = memory::stack::alloc_stack();
-    let mut rsp = stack.top;
+    let stack = Stack::alloc();
+    let mut rsp = stack.top();
 
     rsp -= 8;
     unsafe {
