@@ -1,10 +1,8 @@
 use alloc::collections::VecDeque;
 
-use x86_64::instructions::interrupts;
-
 use crate::{
     memory::stack::Stack,
-    scheduler::{self, context::Context, state::State, switch::Switch, task::Task},
+    scheduler::{self, context::Context, rflags::RFLAGS, state::State, switch::Switch, task::Task},
 };
 
 #[derive(Debug)]
@@ -14,10 +12,10 @@ pub struct RoundRobin {
 }
 
 impl RoundRobin {
-    pub fn new(tasks: VecDeque<Task>) -> Self {
+    pub fn new() -> Self {
         Self {
             current: None,
-            tasks,
+            tasks: VecDeque::with_capacity(5),
         }
     }
 
@@ -44,7 +42,32 @@ impl RoundRobin {
 
         rsp -= 8;
         unsafe {
-            *(rsp.as_mut_ptr()) = (interrupts::enable as fn()) as usize;
+            *(rsp.as_mut_ptr()) = RFLAGS as usize;
+        }
+
+        let context = Context::new_rsp(rsp.as_u64());
+
+        let state = State::Ready;
+
+        self.tasks.push_back(Task {
+            state,
+            context,
+            stack,
+        });
+    }
+
+    pub fn spawn_no_exit(&mut self, entry: fn() -> !) {
+        let stack = Stack::alloc();
+        let mut rsp = stack.top();
+
+        rsp -= 8;
+        unsafe {
+            *(rsp.as_mut_ptr()) = entry as usize;
+        }
+
+        rsp -= 8;
+        unsafe {
+            *(rsp.as_mut_ptr()) = RFLAGS as usize;
         }
 
         let context = Context::new_rsp(rsp.as_u64());

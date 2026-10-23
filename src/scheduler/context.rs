@@ -37,6 +37,7 @@ impl core::fmt::Debug for Context {
             .finish()
     }
 }
+
 #[unsafe(naked)]
 pub unsafe extern "C" fn launch(ctx: *const Context) {
     core::arch::naked_asm!(
@@ -49,6 +50,8 @@ pub unsafe extern "C" fn launch(ctx: *const Context) {
         mov rbp, [rdi + 40]
         mov rsp, [rdi + 48]
 
+        popfq
+
         ret
         ",
     );
@@ -58,6 +61,8 @@ pub unsafe extern "C" fn launch(ctx: *const Context) {
 pub unsafe extern "C" fn switch(old: *mut Context, new: *const Context) {
     core::arch::naked_asm!(
         "
+        pushfq
+
         mov [rdi + 0], r15
         mov [rdi + 8], r14
         mov [rdi + 16], r13
@@ -73,6 +78,8 @@ pub unsafe extern "C" fn switch(old: *mut Context, new: *const Context) {
         mov rbx, [rsi + 32]
         mov rbp, [rsi + 40]
         mov rsp, [rsi + 48]
+
+        popfq
 
         ret
         ",
