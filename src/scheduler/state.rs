@@ -2,5 +2,4 @@
 pub enum State {
     Ready,
     Running,
-    Dead,
 }

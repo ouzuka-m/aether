@@ -23,8 +23,7 @@ impl Stack {
         Self { frame, top }
     }
 
-    #[allow(dead_code)]
-    pub fn deallocate(self) {
+    pub fn deallocate(&self) {
         unsafe { FRAME_ALLOCATOR.lock().deallocate_frame(self.frame()) };
     }
 

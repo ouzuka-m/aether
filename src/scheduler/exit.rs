@@ -4,7 +4,7 @@ use crate::scheduler::SCHEDULER;
 
 pub fn exit() -> ! {
     interrupts::without_interrupts(|| {
-        SCHEDULER.lock().retire_current();
+        SCHEDULER.lock().release_current();
     });
 
     loop {

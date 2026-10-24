@@ -11,13 +11,10 @@ use spin::{lazylock::LazyLock, mutex::Mutex};
 
 use self::{round_robin::RoundRobin, switch::Switch};
 
-pub static SCHEDULER: LazyLock<Mutex<RoundRobin>> = LazyLock::new(|| {
-    let mut scheduler = RoundRobin::new();
+const MAX_TASKS: usize = 10;
 
-    scheduler.spawn_no_exit(idle::idle);
-
-    Mutex::new(scheduler)
-});
+pub static SCHEDULER: LazyLock<Mutex<RoundRobin<MAX_TASKS>>> =
+    LazyLock::new(|| Mutex::new(RoundRobin::new()));
 
 pub fn schedule() {
     let switch = SCHEDULER.lock().prepare();

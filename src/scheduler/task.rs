@@ -7,7 +7,19 @@ use crate::{
 pub struct Task {
     pub state: State,
     pub context: Context,
-
-    #[allow(dead_code)]
     pub stack: Stack,
+}
+
+impl Task {
+    pub const fn new(context: Context, stack: Stack) -> Self {
+        Self {
+            state: State::Ready,
+            context,
+            stack,
+        }
+    }
+
+    pub fn deallocate_stack(&self) {
+        self.stack.deallocate();
+    }
 }
