@@ -28,6 +28,21 @@ pub fn _log(level: Level, args: Arguments) {
     });
 }
 
+pub fn _log_raw(args: Arguments) {
+    interrupts::without_interrupts(|| {
+        if let Some(mut serial) = SERIAL.try_lock() {
+            let _ = serial.write_fmt(args);
+        }
+    });
+}
+
+#[macro_export]
+macro_rules! log {
+    ($($arg:tt)*) => {
+        $crate::log::macros::_log_raw(format_args!($($arg)*))
+    };
+}
+
 /// Logs a message at the debug level.
 #[macro_export]
 macro_rules! debug {

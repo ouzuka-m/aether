@@ -102,15 +102,18 @@ fn panic(info: &PanicInfo) -> ! {
 
     // Output formatted panic details to serial logger
     if let Some(location) = info.location() {
-        error!(
-            "{}\nLocation: {}:{}:{}\n\nKernel halted.",
+        log!(
+            "KERNEL PANIC\n\nMessage: {}\nLocation: {}:{}:{}\n\nKernel halted.",
             info.message(),
             location.file(),
             location.line(),
             location.column()
         );
     } else {
-        error!("{}\n\nKernel halted.", info.message());
+        log!(
+            "KERNEL PANIC\n\nMessage: {}\n\nKernel halted.",
+            info.message()
+        );
     }
 
     qemu::exit::failure();

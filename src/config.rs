@@ -25,12 +25,12 @@ impl TickInterval {
         }
     }
 
-    fn parse(value: &str) -> Option<Self> {
+    fn parse(value: &str) -> Self {
         match value {
-            "100" => Some(Self::Ms100),
-            "500" => Some(Self::Ms500),
-            "1000" => Some(Self::Ms1000),
-            _ => None,
+            "100" => Self::Ms100,
+            "500" => Self::Ms500,
+            "1000" => Self::Ms1000,
+            _ => panic!("Invalid tick_ms value. Available option: 100, 500, 1000"),
         }
     }
 }
@@ -61,14 +61,10 @@ impl Config {
 
             match key {
                 "log_level" => {
-                    if let Some(level) = Self::parse_log_level(value) {
-                        config.log_level = level;
-                    }
+                    config.log_level = Self::parse_log_level(value);
                 }
                 "tick_ms" => {
-                    if let Some(interval) = TickInterval::parse(value) {
-                        config.tick_interval = interval;
-                    }
+                    config.tick_interval = TickInterval::parse(value);
                 }
                 _ => {}
             }
@@ -77,13 +73,13 @@ impl Config {
         config
     }
 
-    fn parse_log_level(value: &str) -> Option<Level> {
+    fn parse_log_level(value: &str) -> Level {
         match value {
-            "debug" => Some(Level::Debug),
-            "info" => Some(Level::Info),
-            "warn" => Some(Level::Warn),
-            "error" => Some(Level::Error),
-            _ => None,
+            "debug" => Level::Debug,
+            "info" => Level::Info,
+            "warn" => Level::Warn,
+            "error" => Level::Error,
+            _ => panic!("Invalid log_level value. Available option: debug, info, warn, error"),
         }
     }
 
