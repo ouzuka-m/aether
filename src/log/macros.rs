@@ -11,7 +11,7 @@ use crate::{config::CONFIG, drivers::uart::SERIAL, log::level::Level};
 
 /// Internal logging function used by the logging macros.
 pub fn _log(level: Level, args: Arguments) {
-    if level < CONFIG.log_level {
+    if level < CONFIG.log_level() {
         return;
     }
 

@@ -11,6 +11,7 @@ use x86_64::registers::model_specific::Msr;
 
 use crate::{
     arch::x86_64::idt::TIMER_VECTOR,
+    config::TickInterval,
     drivers::{hpet, lapic},
 };
 
@@ -46,11 +47,13 @@ pub fn init() {
 
     crate::info!("TSC-Deadline timer initialized ({} ticks/ms)", ticks);
 
-    arm(1);
+    wrmsr(1);
 }
 
-/// Arms the TSC-Deadline timer to fire after `ms` milliseconds.
-pub fn arm(ms: u64) {
+/// Arms the TSC-Deadline timer to fire.
+pub fn arm(tick: TickInterval) {
+    let ms = tick.as_millis();
+
     // SAFETY: _rdtsc is a non-destructive read of the TSC register.
     let now = unsafe { core::arch::x86_64::_rdtsc() };
     let ticks_per_ms = ticks_per_ms();

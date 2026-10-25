@@ -11,6 +11,7 @@ use x86_64::{instructions::interrupts, structures::idt::InterruptStackFrame};
 
 use crate::{
     arch::x86_64::idt::READ_COMMAND_VECTOR,
+    config::CONFIG,
     drivers::{apic::lapic, input::ps2_keyboard, tsc_deadline},
     print, scheduler, warn,
 };
@@ -34,7 +35,7 @@ pub extern "x86-interrupt" fn timer(_: InterruptStackFrame) {
     // Fix keyboard sometimes "die" when you spamming keys on startup
     ps2_keyboard::clear_buffer();
 
-    tsc_deadline::arm(1);
+    tsc_deadline::arm(CONFIG.tick_interval());
 
     lapic::eoi();
 

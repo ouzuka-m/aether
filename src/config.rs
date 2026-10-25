@@ -1,49 +1,97 @@
 //! Kernel runtime configuration.
 //!
-//! Parses the kernel command line (supplied by the bootloader) to
-//! extract configuration parameters such as the log verbosity level.
+//! Parses the kernel command line supplied by the bootloader and
+//! initializes runtime configuration with validated values.
 
 use spin::lazylock::LazyLock;
 
 use crate::{boot::info::CMDLINE, log::level::Level};
 
-pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
-    let mut config = Config::default();
-    let cmdline = *CMDLINE;
-    if cmdline.is_empty() {
-        return config;
-    }
+pub static CONFIG: LazyLock<Config> = LazyLock::new(|| Config::parse(*CMDLINE));
 
-    for arg in cmdline.split_whitespace() {
-        if let Some(value) = arg.strip_prefix("log_level=") {
-            match value {
-                "debug" => config.set_log_level(Level::Debug),
-                "info" => config.set_log_level(Level::Info),
-                "warn" => config.set_log_level(Level::Warn),
-                "error" => config.set_log_level(Level::Error),
-                _ => {}
-            }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TickInterval {
+    Ms100,
+    Ms500,
+    Ms1000,
+}
+
+impl TickInterval {
+    pub const fn as_millis(self) -> u64 {
+        match self {
+            Self::Ms100 => 100,
+            Self::Ms500 => 500,
+            Self::Ms1000 => 1000,
         }
     }
 
-    config
-});
+    fn parse(value: &str) -> Option<Self> {
+        match value {
+            "100" => Some(Self::Ms100),
+            "500" => Some(Self::Ms500),
+            "1000" => Some(Self::Ms1000),
+            _ => None,
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Config {
-    pub log_level: Level,
+    log_level: Level,
+    tick_interval: TickInterval,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             log_level: Level::Info,
+            tick_interval: TickInterval::Ms100,
         }
     }
 }
 
 impl Config {
-    pub fn set_log_level(&mut self, log_level: Level) {
-        self.log_level = log_level;
+    fn parse(cmdline: &str) -> Self {
+        let mut config = Self::default();
+
+        for arg in cmdline.split_whitespace() {
+            let Some((key, value)) = arg.split_once('=') else {
+                continue;
+            };
+
+            match key {
+                "log_level" => {
+                    if let Some(level) = Self::parse_log_level(value) {
+                        config.log_level = level;
+                    }
+                }
+                "tick_ms" => {
+                    if let Some(interval) = TickInterval::parse(value) {
+                        config.tick_interval = interval;
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        config
+    }
+
+    fn parse_log_level(value: &str) -> Option<Level> {
+        match value {
+            "debug" => Some(Level::Debug),
+            "info" => Some(Level::Info),
+            "warn" => Some(Level::Warn),
+            "error" => Some(Level::Error),
+            _ => None,
+        }
+    }
+
+    pub const fn log_level(&self) -> Level {
+        self.log_level
+    }
+
+    pub const fn tick_interval(&self) -> TickInterval {
+        self.tick_interval
     }
 }
