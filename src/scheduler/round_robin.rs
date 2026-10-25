@@ -1,7 +1,8 @@
 use crate::{
     memory::stack::Stack,
     scheduler::{
-        context::Context, exit, idle, rflags::RFLAGS, state::State, switch::Switch, task::Task,
+        context::Context, error::SpawnError, exit, idle, rflags::RFLAGS, state::State,
+        switch::Switch, task::Task,
     },
 };
 
@@ -106,8 +107,8 @@ impl<const N: usize> RoundRobin<N> {
     }
 
     #[allow(dead_code)]
-    pub fn spawn(&mut self, entry: fn()) {
-        if let Some(task) = self.tasks.iter_mut().find(|task| task.is_none()) {
+    pub fn spawn(&mut self, entry: fn()) -> Result<usize, SpawnError> {
+        if let Some(index) = self.tasks.iter().position(Option::is_none) {
             let stack = Stack::alloc();
             let mut rsp = stack.top();
 
@@ -128,8 +129,12 @@ impl<const N: usize> RoundRobin<N> {
 
             let context = Context::new_rsp(rsp.as_u64());
 
-            *task = Some(Task::new(context, stack));
+            self.tasks[index] = Some(Task::new(context, stack));
+
+            return Ok(index);
         }
+
+        Err(SpawnError::CapacityFull)
     }
 
     #[allow(dead_code)]

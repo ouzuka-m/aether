@@ -1,4 +1,5 @@
 pub mod context;
+pub mod error;
 pub mod exit;
 pub mod idle;
 pub mod rflags;
@@ -11,9 +12,7 @@ use spin::{lazylock::LazyLock, mutex::Mutex};
 
 use self::{round_robin::RoundRobin, switch::Switch};
 
-const MAX_TASKS: usize = 10;
-
-pub static SCHEDULER: LazyLock<Mutex<RoundRobin<MAX_TASKS>>> =
+pub static SCHEDULER: LazyLock<Mutex<RoundRobin<255>>> =
     LazyLock::new(|| Mutex::new(RoundRobin::new()));
 
 pub fn schedule() {
