@@ -27,11 +27,11 @@ impl Stack {
         unsafe { FRAME_ALLOCATOR.lock().deallocate_frame(self.frame()) };
     }
 
-    pub fn frame(&self) -> PhysFrame {
+    pub const fn frame(&self) -> PhysFrame {
         self.frame
     }
 
-    pub fn top(&self) -> VirtAddr {
+    pub const fn top(&self) -> VirtAddr {
         self.top
     }
 }
