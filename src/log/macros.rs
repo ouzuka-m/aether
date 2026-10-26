@@ -15,11 +15,7 @@ pub fn _log(level: Level, args: Arguments) {
         return;
     }
 
-    // SAFETY: _rdtsc reads the Time Stamp Counter, a monotonically
-    // increasing counter available on all x86_64 CPUs. It is a
-    // non-destructive, side-effect-free operation.
-    let timestamp = unsafe { core::arch::x86_64::_rdtsc() };
-    let args = format_args!("[{}] [{}] {}\n", timestamp, level.as_str(), args);
+    let args = format_args!("[{}] {}\n", level.as_str(), args);
 
     interrupts::without_interrupts(|| {
         if let Some(mut serial) = SERIAL.try_lock() {
