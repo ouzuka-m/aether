@@ -3,8 +3,6 @@ use x86_64::{
     structures::idt::{InterruptStackFrame, PageFaultErrorCode},
 };
 
-use crate::{debug, info, warn};
-
 /// Vector 0: Divide Error (#DE)
 ///
 /// Triggered when a division instruction (e.g., `DIV` or `IDIV`) is executed with a divisor of zero,
@@ -13,9 +11,9 @@ use crate::{debug, info, warn};
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn divide_error(stack_frame: InterruptStackFrame) {
-    panic!("Divide Error\nRIP: {:#x}", stack_frame.instruction_pointer);
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn divide_error(_: InterruptStackFrame) {
+    panic!("Divide Error (#DE)");
 }
 
 /// Vector 1: Debug (#DB)
@@ -26,9 +24,9 @@ pub extern "x86-interrupt" fn divide_error(stack_frame: InterruptStackFrame) {
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Prints the exception name along with the interrupt stack frame.
-pub extern "x86-interrupt" fn debug(stack_frame: InterruptStackFrame) {
-    debug!("Debug\nRIP: {:#x}", stack_frame.instruction_pointer);
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn debug(_: InterruptStackFrame) {
+    panic!("Debug (#DB)");
 }
 
 /// Vector 2: Non-Maskable Interrupt (#NMI)
@@ -41,11 +39,8 @@ pub extern "x86-interrupt" fn debug(stack_frame: InterruptStackFrame) {
 ///
 /// # Behavior
 /// Currently, this handler panics to stop execution.
-pub extern "x86-interrupt" fn non_maskable_interrupt(stack_frame: InterruptStackFrame) {
-    panic!(
-        "Non-Maskable Interrupt\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+pub extern "x86-interrupt" fn non_maskable_interrupt(_: InterruptStackFrame) {
+    panic!("Non-Maskable Interrupt (#NMI)");
 }
 
 /// Vector 3: Breakpoint (#BP)
@@ -56,9 +51,9 @@ pub extern "x86-interrupt" fn non_maskable_interrupt(stack_frame: InterruptStack
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Prints the exception name and the stack frame.
-pub extern "x86-interrupt" fn breakpoint(stack_frame: InterruptStackFrame) {
-    info!("Breakpoint\nRIP: {:#x}", stack_frame.instruction_pointer);
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn breakpoint(_: InterruptStackFrame) {
+    panic!("Breakpoint (#BP)");
 }
 
 /// Vector 4: Overflow (#OF)
@@ -69,9 +64,9 @@ pub extern "x86-interrupt" fn breakpoint(stack_frame: InterruptStackFrame) {
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn overflow(stack_frame: InterruptStackFrame) {
-    panic!("Overflow\nRIP: {:#x}", stack_frame.instruction_pointer);
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn overflow(_: InterruptStackFrame) {
+    panic!("Overflow (#OF)");
 }
 
 /// Vector 5: Bound Range Exceeded (#BR)
@@ -82,12 +77,9 @@ pub extern "x86-interrupt" fn overflow(stack_frame: InterruptStackFrame) {
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn bound_range_exceeded(stack_frame: InterruptStackFrame) {
-    panic!(
-        "Bound Range Exceeded\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn bound_range_exceeded(_: InterruptStackFrame) {
+    panic!("Bound Range Exceeded (#BR)");
 }
 
 /// Vector 6: Invalid Opcode (#UD)
@@ -98,12 +90,9 @@ pub extern "x86-interrupt" fn bound_range_exceeded(stack_frame: InterruptStackFr
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn invalid_opcode(stack_frame: InterruptStackFrame) {
-    panic!(
-        "Invalid Opcode\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn invalid_opcode(_: InterruptStackFrame) {
+    panic!("Invalid Opcode (#UD)");
 }
 
 /// Vector 7: Device Not Available (#NM)
@@ -114,12 +103,9 @@ pub extern "x86-interrupt" fn invalid_opcode(stack_frame: InterruptStackFrame) {
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Prints the exception details and the stack frame.
-pub extern "x86-interrupt" fn device_not_available(stack_frame: InterruptStackFrame) {
-    warn!(
-        "Device Not Available\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn device_not_available(_: InterruptStackFrame) {
+    panic!("Device Not Available (#NM)");
 }
 
 /// Vector 8: Double Fault (#DF)
@@ -132,8 +118,8 @@ pub extern "x86-interrupt" fn device_not_available(stack_frame: InterruptStackFr
 /// # Behavior
 /// This handler diverges (`-> !`) and panics, halting the system. It runs on a dedicated stack
 /// to prevent stack overflows from causing a triple fault (which would reboot the machine).
-pub extern "x86-interrupt" fn double_fault(stack_frame: InterruptStackFrame, _: u64) -> ! {
-    panic!("Double Fault\nRIP: {:#x}", stack_frame.instruction_pointer);
+pub extern "x86-interrupt" fn double_fault(_: InterruptStackFrame, _: u64) -> ! {
+    panic!("Double Fault (#DF)");
 }
 
 /// Vector 10: Invalid TSS (#TS)
@@ -144,12 +130,9 @@ pub extern "x86-interrupt" fn double_fault(stack_frame: InterruptStackFrame, _: 
 /// This exception pushes an error code containing the selector index.
 ///
 /// # Behavior
-/// Currently, this handler panics with the error code and stack frame.
-pub extern "x86-interrupt" fn invalid_tss(stack_frame: InterruptStackFrame, error_code: u64) {
-    panic!(
-        "Invalid TSS\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn invalid_tss(_: InterruptStackFrame, _: u64) {
+    panic!("Invalid TSS (#TS)");
 }
 
 /// Vector 11: Segment Not Present (#NP)
@@ -160,15 +143,9 @@ pub extern "x86-interrupt" fn invalid_tss(stack_frame: InterruptStackFrame, erro
 /// This exception pushes an error code containing the selector index.
 ///
 /// # Behavior
-/// Prints the exception name, the selector/error code, and the stack frame.
-pub extern "x86-interrupt" fn segment_not_present(
-    stack_frame: InterruptStackFrame,
-    error_code: u64,
-) {
-    warn!(
-        "Segment Not Present\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn segment_not_present(_: InterruptStackFrame, _: u64) {
+    panic!("Segment Not Present (#NP)");
 }
 
 /// Vector 12: Stack-Segment Fault (#SS)
@@ -179,15 +156,9 @@ pub extern "x86-interrupt" fn segment_not_present(
 /// This exception pushes an error code containing the selector index.
 ///
 /// # Behavior
-/// Prints the exception name, the error code, and the stack frame.
-pub extern "x86-interrupt" fn stack_segment_fault(
-    stack_frame: InterruptStackFrame,
-    error_code: u64,
-) {
-    warn!(
-        "Stack Segment Fault\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn stack_segment_fault(_: InterruptStackFrame, _: u64) {
+    panic!("Stack Segment Fault (#SS)");
 }
 
 /// Vector 13: General Protection Fault (#GP)
@@ -199,15 +170,9 @@ pub extern "x86-interrupt" fn stack_segment_fault(
 /// This exception pushes an error code (often 0, or containing a selector index).
 ///
 /// # Behavior
-/// Currently, this handler panics with the error code and stack frame.
-pub extern "x86-interrupt" fn general_protection_fault(
-    stack_frame: InterruptStackFrame,
-    error_code: u64,
-) {
-    panic!(
-        "General Protection Fault\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn general_protection_fault(_: InterruptStackFrame, _: u64) {
+    panic!("General Protection Fault (#GP)");
 }
 
 /// Vector 14: Page Fault (#PF)
@@ -222,17 +187,13 @@ pub extern "x86-interrupt" fn general_protection_fault(
 ///
 /// # TODO
 /// Implement page fault resolution by dynamically allocating a new page.
-pub extern "x86-interrupt" fn page_fault(
-    stack_frame: InterruptStackFrame,
-    error_code: PageFaultErrorCode,
-) {
+pub extern "x86-interrupt" fn page_fault(_: InterruptStackFrame, error: PageFaultErrorCode) {
     // TODO: Handle page fault by allocating a new page.
-
     let faulting_address = Cr2::read_raw();
 
     panic!(
-        "Page Fault\nFaulting Address: {:#x}\nRIP: {:#x}\nError Code: {:?}",
-        faulting_address, stack_frame.instruction_pointer, error_code
+        "Page Fault (#PF) at {faulting_address:#x} with error code {:#x}",
+        error.bits()
     );
 }
 
@@ -244,12 +205,9 @@ pub extern "x86-interrupt" fn page_fault(
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn x87_floating_point(stack_frame: InterruptStackFrame) {
-    panic!(
-        "X87 Floating Point\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn x87_floating_point(_: InterruptStackFrame) {
+    panic!("x87 Floating-Point Exception (#MF)");
 }
 
 /// Vector 17: Alignment Check (#AC)
@@ -260,12 +218,9 @@ pub extern "x86-interrupt" fn x87_floating_point(stack_frame: InterruptStackFram
 /// This exception pushes a dummy error code (always 0) onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the error code and stack frame.
-pub extern "x86-interrupt" fn alignment_check(stack_frame: InterruptStackFrame, error_code: u64) {
-    panic!(
-        "Alignment Check\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn alignment_check(_: InterruptStackFrame, _: u64) {
+    panic!("Alignment Check (#AC)");
 }
 
 /// Vector 18: Machine Check (#MC)
@@ -276,11 +231,8 @@ pub extern "x86-interrupt" fn alignment_check(stack_frame: InterruptStackFrame, 
 ///
 /// # Behavior
 /// This handler diverges (`-> !`) and panics, halting execution on a dedicated stack.
-pub extern "x86-interrupt" fn machine_check_exception(stack_frame: InterruptStackFrame) -> ! {
-    panic!(
-        "Machine Check Exception\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+pub extern "x86-interrupt" fn machine_check_exception(_: InterruptStackFrame) -> ! {
+    panic!("Machine Check Exception (#MC)");
 }
 
 /// Vector 19: SIMD Floating-Point Exception (#XM)
@@ -291,12 +243,9 @@ pub extern "x86-interrupt" fn machine_check_exception(stack_frame: InterruptStac
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn simd_floating_point(stack_frame: InterruptStackFrame) {
-    panic!(
-        "SIMD Floating Point\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn simd_floating_point(_: InterruptStackFrame) {
+    panic!("SIMD Floating-Point Exception (#XM)");
 }
 
 /// Vector 20: Virtualization Exception (#VE)
@@ -307,12 +256,9 @@ pub extern "x86-interrupt" fn simd_floating_point(stack_frame: InterruptStackFra
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn virtualization_exception(stack_frame: InterruptStackFrame) {
-    panic!(
-        "Virtualization Exception\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn virtualization_exception(_: InterruptStackFrame) {
+    panic!("Virtualization Exception (#VE)");
 }
 
 /// Vector 21: Control Protection Exception (#CP)
@@ -323,15 +269,9 @@ pub extern "x86-interrupt" fn virtualization_exception(stack_frame: InterruptSta
 /// This exception pushes an error code indicating the cause of the control protection fault.
 ///
 /// # Behavior
-/// Currently, this handler panics with the error code and stack frame.
-pub extern "x86-interrupt" fn control_protection_exception(
-    stack_frame: InterruptStackFrame,
-    error_code: u64,
-) {
-    panic!(
-        "Control Protection Exception\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn control_protection_exception(_: InterruptStackFrame, _: u64) {
+    panic!("Control Protection Exception (#CP)");
 }
 
 /// Vector 28: Hypervisor Injection Exception (#HV)
@@ -341,12 +281,9 @@ pub extern "x86-interrupt" fn control_protection_exception(
 /// This exception does not push an error code onto the stack.
 ///
 /// # Behavior
-/// Currently, this handler panics with the interrupt stack frame.
-pub extern "x86-interrupt" fn hv_injection_exception(stack_frame: InterruptStackFrame) {
-    panic!(
-        "HV Injection Exception\nRIP: {:#x}",
-        stack_frame.instruction_pointer
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn hv_injection_exception(_: InterruptStackFrame) {
+    panic!("Hypervisor Injection Exception (#HV)");
 }
 
 /// Vector 29: VMM Communication Exception (#VC)
@@ -357,15 +294,9 @@ pub extern "x86-interrupt" fn hv_injection_exception(stack_frame: InterruptStack
 /// This exception pushes an error code.
 ///
 /// # Behavior
-/// Currently, this handler panics with the error code and stack frame.
-pub extern "x86-interrupt" fn vmm_communication_exception(
-    stack_frame: InterruptStackFrame,
-    error_code: u64,
-) {
-    panic!(
-        "VMM Communication Exception\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn vmm_communication_exception(_: InterruptStackFrame, _: u64) {
+    panic!("VMM Communication Exception (#VC)");
 }
 
 /// Vector 30: Security Exception (#SX)
@@ -375,13 +306,7 @@ pub extern "x86-interrupt" fn vmm_communication_exception(
 /// This exception pushes an error code.
 ///
 /// # Behavior
-/// Currently, this handler panics with the error code and stack frame.
-pub extern "x86-interrupt" fn security_exception(
-    stack_frame: InterruptStackFrame,
-    error_code: u64,
-) {
-    panic!(
-        "Security Exception\nRIP: {:#x}\nError Code: {}",
-        stack_frame.instruction_pointer, error_code
-    );
+/// Currently, this handler panics.
+pub extern "x86-interrupt" fn security_exception(_: InterruptStackFrame, _: u64) {
+    panic!("Security Exception (#SX)");
 }
