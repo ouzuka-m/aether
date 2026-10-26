@@ -8,6 +8,9 @@ use pc_keyboard::{DecodedKey, HandleControl, PS2Keyboard, ScancodeSet1, layouts:
 use spin::{lazylock::LazyLock, mutex::Mutex};
 use x86_64::instructions::port::Port;
 
+const DATA: u16 = 0x60;
+const STATUS: u16 = 0x64;
+
 /// Thread-safe PS/2 keyboard driver instance.
 static KEYBOARD: LazyLock<Mutex<PS2Keyboard<Us104Key, ScancodeSet1>>> = LazyLock::new(|| {
     Mutex::new(PS2Keyboard::new(
@@ -22,7 +25,7 @@ pub fn read() -> u8 {
     // SAFETY: Port 0x60 is the standard PS/2 data port. Reading it
     // returns the most recent scancode and has no side effects beyond
     // consuming the byte from the controller's output buffer.
-    unsafe { Port::new(0x60).read() }
+    unsafe { Port::new(DATA).read() }
 }
 
 /// Attempts to decode a raw scancode into a [`DecodedKey`].
@@ -40,8 +43,8 @@ pub fn decode(scancode: u8) -> Option<DecodedKey> {
 /// Reads and discards data from port `0x60` until the Output Buffer
 /// Status bit (bit 0) in the status register (port `0x64`) is clear.
 pub fn clear_buffer() {
-    let mut status_port: Port<u8> = Port::new(0x64);
-    let mut data_port: Port<u8> = Port::new(0x60);
+    let mut status_port: Port<u8> = Port::new(STATUS);
+    let mut data_port: Port<u8> = Port::new(DATA);
 
     // SAFETY: Ports 0x64 (status) and 0x60 (data) are standard PS/2
     // controller ports. Reading them is non-destructive apart from
