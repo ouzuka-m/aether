@@ -45,12 +45,12 @@ tar -cf iso/boot/initramfs.tar rootfs/*
 
 if [ "$MODE" = "release" ]; then
     cargo build --release
-    cp target/x86_64-unknown-none/release/aether \
-       iso/boot/aether.elf
+    cp target/x86_64-unknown-none/release/regesa \
+       iso/boot/regesa.elf
 else
     cargo build
-    cp target/x86_64-unknown-none/debug/aether \
-       iso/boot/aether.elf
+    cp target/x86_64-unknown-none/debug/regesa \
+       iso/boot/regesa.elf
 fi
 
 xorriso -as mkisofs \
@@ -59,6 +59,6 @@ xorriso -as mkisofs \
   --efi-boot-image \
   --protective-msdos-label \
   iso \
-  -o aether.iso
+  -o regesa.iso
 
-echo "build complete: aether.iso ($MODE)"
+echo "build complete: regesa.iso ($MODE)"

@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub fn welcome() {
-    println!("Welcome to Aether!\n");
+    println!("Welcome to Regesa!\n");
 
     let mut bytes = [0u8; 48];
 
@@ -50,5 +50,5 @@ pub fn welcome() {
 
     println!("Framebuffer: {width}x{height}\n");
 
-    println!("Report issues at https://github.com/ouzuka-m/aether/issues");
+    println!("Report issues at https://github.com/ouzuka-m/regesa/issues");
 }

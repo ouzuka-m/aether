@@ -1,6 +1,6 @@
-//! # Aether Kernel Entry Point
+//! # Regesa Kernel Entry Point
 //!
-//! This module serves as the primary entry point for the Aether operating system kernel.
+//! This module serves as the primary entry point for the Regesa operating system kernel.
 //! It disables interrupts during early boot, initializes essential core subsystems
 //! (GDT, IDT, page frame allocation, virtual memory mapping, global heap allocator, and ACPI),
 //! and transitions the CPU into an power-efficient idle loop waiting for interrupts.
@@ -51,7 +51,7 @@ extern "C" fn _start() -> ! {
     // Disable CPU hardware interrupts during critical boot sequence
     instructions::interrupts::disable();
 
-    info!("Aether Kernel starting...");
+    info!("Regesa Kernel starting...");
 
     // Load Global Descriptor Table (GDT) and Task State Segment (TSS)
     gdt::init();

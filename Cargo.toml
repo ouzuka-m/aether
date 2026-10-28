@@ -1,11 +1,11 @@
 [package]
-name = "aether"
-description = "Experimental Operating System in Rust."
+name = "regesa"
+description = "64-bit Operating System Kernel in Rust"
 version = "0.1.0"
 edition = "2024"
 license = "GPL-2.0"
 readme = "README.md"
-repository = "https://github.com/ouzuka-m/aether"
+repository = "https://github.com/ouzuka-m/regesa"
 keywords = ["no-std", "rust", "memory", "kernel", "embedded"]
 categories = ["os", "no-std", "memory-management", "filesystem", "embedded"]
 
@@ -20,7 +20,7 @@ buddy_system_allocator = { version = "0.13", default-features = false, features 
 acpi = "6.1"
 
 [[bin]]
-name = "aether"
+name = "regesa"
 test = false
 bench = false
 

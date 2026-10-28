@@ -1,19 +1,19 @@
-# Aether
+# Regesa
 
-**Experimental 64-bit Operating System Kernel in Rust**
+**64-bit Operating System Kernel in Rust**
 
-[![Rust Kernel CI](https://github.com/ouzuka-m/aether/actions/workflows/rust.yml/badge.svg)](https://github.com/ouzuka-m/aether/actions/workflows/rust.yml)
+[![Rust Kernel CI](https://github.com/ouzuka-m/regesa/actions/workflows/rust.yml/badge.svg)](https://github.com/ouzuka-m/regesa/actions/workflows/rust.yml)
 ![License](https://img.shields.io/badge/license-GPL--2.0-blue)
 ![Architecture](https://img.shields.io/badge/arch-x86__64-orange)
 ![Rust](https://img.shields.io/badge/rust-nightly-red)
 ![Boot](https://img.shields.io/badge/boot-UEFI%20%2B%20Limine-green)
 
-## What is Aether?
+## What is Regesa?
 
-Aether is an experimental operating system kernel written in Rust, targeting x86_64 systems with UEFI boot via the [Limine](https://github.com/limine-bootloader/limine) boot protocol. The project focuses on safety and modern kernel design.
+Regesa is an operating system kernel written in Rust, targeting x86_64 systems with UEFI boot via the [Limine](https://github.com/limine-bootloader/limine) boot protocol. The project focuses on safety and modern kernel design.
 
 > [!NOTE]
-> Aether is in early, active development. Expect frequent breaking changes.
+> regesa is in early, active development. Expect frequent breaking changes.
 
 ## Hardware Requirements
 
@@ -61,7 +61,7 @@ Build scripts are located in the [`scripts/`](scripts/) directory.
 ./scripts/build.sh debug
 ```
 
-Compiles the kernel in debug mode and creates `aether.iso`.
+Compiles the kernel in debug mode and creates `regesa.iso`.
 
 ### Release Build
 
@@ -69,7 +69,7 @@ Compiles the kernel in debug mode and creates `aether.iso`.
 ./scripts/build.sh release
 ```
 
-Compiles the kernel with optimizations and creates `aether.iso`.
+Compiles the kernel with optimizations and creates `regesa.iso`.
 
 Both scripts will:
 1. Pack `rootfs/` into `iso/boot/initramfs.tar`
@@ -83,7 +83,7 @@ After building, launch the ISO with QEMU + OVMF:
 ```bash
 qemu-system-x86_64 \
   -bios /usr/share/edk2/x64/OVMF.fd \
-  -cdrom aether.iso \
+  -cdrom regesa.iso \
   -cpu host \
   -enable-kvm
 ```
@@ -93,7 +93,7 @@ To capture serial output in the terminal:
 ```bash
 qemu-system-x86_64 \
   -bios /usr/share/edk2/x64/OVMF.fd \
-  -cdrom aether.iso \
+  -cdrom regesa.iso \
   -cpu host \
   -enable-kvm \
   -serial stdio
@@ -115,7 +115,7 @@ qemu-system-x86_64 \
 ## Directory Layout
 
 ```
-aether/
+regesa/
 ├── build/          Build scripts (debug.sh, release.sh)
 ├── iso/            ISO structure with Limine bootloader binaries
 ├── rootfs/         Root filesystem files packed into initramfs
@@ -139,10 +139,10 @@ aether/
 
 ## Contributing — We Need You!
 
-Aether is an ambitious, experimental kernel under active development. Building an operating system from the ground up is a huge challenge, and **we need your help to make it rock solid**. Whether you are an experienced systems hacker or exploring OS development in Rust for the first time, there are plenty of high-impact areas where you can jump in right away:
+regesa is an ambitious, experimental kernel under active development. Building an operating system from the ground up is a huge challenge, and **we need your help to make it rock solid**. Whether you are an experienced systems hacker or exploring OS development in Rust for the first time, there are plenty of high-impact areas where you can jump in right away:
 
 - **🧪 Testing & Hardware Verification**:
-  Aether does not have an automated test suite yet. You can help by running manual boot tests across diverse CPU and QEMU/KVM setups, testing both debug and release builds, monitoring serial output, and hunting down panics, freezes, or regressions.
+  regesa does not have an automated test suite yet. You can help by running manual boot tests across diverse CPU and QEMU/KVM setups, testing both debug and release builds, monitoring serial output, and hunting down panics, freezes, or regressions.
 - **🛡️ Auditing & Safe Abstractions (`unsafe`)**:
   Low-level hardware access inevitably requires `unsafe`, but we strive to keep it minimal. Help us audit raw pointers and MMIO/register accesses, wrap low-level routines into sound, idiomatic safe abstractions, and document safety invariants with `// SAFETY:` comments.
 - **📦 Dependency & Toolchain Maintenance**:
@@ -150,10 +150,10 @@ Aether is an ambitious, experimental kernel under active development. Building a
 - **✨ Code Quality & Linting**:
   We enforce a strict **zero-warnings, zero-errors** policy (`cargo clippy -- -D warnings`). Help polish existing code, adopt more idiomatic patterns, improve formatting (`cargo fmt`), and expand inline documentation.
 - **⚙️ Kernel Subsystem & Driver Expansion**:
-  Help advance Aether's core capabilities — including physical/virtual memory management, scheduling, filesystem features (beyond initramfs), interrupt controllers (APIC/HPET), and hardware drivers.
+  Help advance regesa's core capabilities — including physical/virtual memory management, scheduling, filesystem features (beyond initramfs), interrupt controllers (APIC/HPET), and hardware drivers.
 
 Ready to contribute? Check out [CONTRIBUTING.md](CONTRIBUTING.md) for our detailed guidelines, code standards, and PR workflow.
 
 ## License
 
-Aether is licensed under the [GNU General Public License v2.0 (GPL-2.0)](LICENSE).
+regesa is licensed under the [GNU General Public License v2.0 (GPL-2.0)](LICENSE).

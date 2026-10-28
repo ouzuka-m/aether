@@ -42,7 +42,7 @@ jobs:
           set -o pipefail
 
           timeout 30s qemu-system-x86_64 \
-            -cdrom aether.iso \
+            -cdrom regesa.iso \
             -bios /usr/share/qemu/OVMF.fd \
             -cpu max \
             -enable-kvm \

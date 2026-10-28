@@ -1,6 +1,6 @@
-# Contributing to Aether
+# Contributing to Regesa
 
-Thank you for your interest in contributing to Aether! This document outlines the guidelines and requirements that **every contributor must follow** to maintain codebase quality and stability.
+Thank you for your interest in contributing to Regesa! This document outlines the guidelines and requirements that **every contributor must follow** to maintain codebase quality and stability.
 
 ---
 
@@ -18,7 +18,7 @@ Thank you for your interest in contributing to Aether! This document outlines th
 
 ## Codebase Stabilization
 
-Aether is an experimental kernel under active development. Keeping the codebase stable is a top priority.
+Regesa is an experimental kernel under active development. Keeping the codebase stable is a top priority.
 
 Core principles:
 
@@ -30,7 +30,7 @@ Core principles:
 
 ## Toolchain Management
 
-Aether uses **Rust nightly** because it depends on unstable features (such as `abi_x86_interrupt`). The toolchain is pinned to a specific nightly date to ensure reproducible builds.
+Regesa uses **Rust nightly** because it depends on unstable features (such as `abi_x86_interrupt`). The toolchain is pinned to a specific nightly date to ensure reproducible builds.
 
 ### Source of Truth
 
@@ -46,7 +46,7 @@ Example of a correct, synchronized state:
 ```toml
 # rust-toolchain.toml
 [toolchain]
-channel = "nightly-2026-09-01"
+channel = "nightly-2026-10-01"
 components = ["rustfmt", "clippy", "rust-src"]
 ```
 
@@ -147,8 +147,8 @@ cargo clippy -- -D warnings
 ```bash
 cargo fmt                        # Format code
 cargo clippy -- -D warnings      # Lint and check for warnings
-./build/debug.sh                 # Debug build
-./build/release.sh               # Release build
+./scripts/build.sh debug         # Debug build
+./scripts/build.sh release       # Release build
 ```
 
 All four steps above **must** succeed without errors before pushing.
@@ -180,16 +180,16 @@ pub fn read_cr3() -> PhysFrame {
 ## Manual Verification
 
 > [!WARNING]
-> Aether **does not have a test suite or testing framework**. This means every change must be manually verified by the contributor.
+> Regesa **does not have a test suite or testing framework**. This means every change must be manually verified by the contributor.
 
 Since there is no automated testing, contributors are responsible for:
 
 1. **Boot test** — ensure the kernel still boots after your changes.
    ```bash
-   ./build/debug.sh
+   ./scripts/build.sh
    qemu-system-x86_64 \
      -bios /usr/share/edk2/x64/OVMF.fd \
-     -cdrom aether.iso \
+     -cdrom regesa.iso \
      -cpu host \
      -enable-kvm \
      -serial stdio
@@ -205,7 +205,7 @@ Since there is no automated testing, contributors are responsible for:
 
 4. **Test with the release build as well** — certain bugs only appear in release builds due to compiler optimizations.
    ```bash
-   ./build/release.sh
+   ./scripts/build.sh release
    ```
 
 ---
@@ -232,4 +232,4 @@ Since there is no automated testing, contributors are responsible for:
 
 ---
 
-> Thank you for helping build Aether! 🚀
+> Thank you for helping build Regesa! 🚀
