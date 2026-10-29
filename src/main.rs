@@ -12,7 +12,6 @@
 
 extern crate alloc;
 
-mod arch;
 mod boot;
 mod config;
 mod display;
@@ -22,16 +21,17 @@ mod log;
 mod memory;
 mod qemu;
 mod scheduler;
+mod x86_64;
 
+use ::x86_64::instructions::{self, interrupts};
 use core::panic::PanicInfo;
-use x86_64::instructions::{self, interrupts};
 
 use crate::initramfs::TAR;
 
 use self::{
-    arch::x86_64::{gdt, idt},
     display::greet,
     memory::heap_allocator,
+    x86_64::{gdt, idt},
 };
 
 /// Kernel entry point called by the Limine bootloader.

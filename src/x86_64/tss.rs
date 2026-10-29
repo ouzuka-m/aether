@@ -8,8 +8,8 @@ use spin::lazylock::LazyLock;
 use x86_64::{VirtAddr, structures::tss::TaskStateSegment};
 
 use crate::{
-    arch::x86_64::ist::{self, Stack},
     memory::address::VirtExt,
+    x86_64::ist::{self, Stack},
 };
 
 pub static TASK_STATE_SEGMENT: LazyLock<TaskStateSegment> = LazyLock::new(|| {

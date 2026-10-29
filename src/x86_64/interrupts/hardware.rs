@@ -10,10 +10,10 @@ use spin::mutex::Mutex;
 use x86_64::{instructions::interrupts, structures::idt::InterruptStackFrame};
 
 use crate::{
-    arch::x86_64::idt::READ_COMMAND_VECTOR,
     config::CONFIG,
     drivers::{apic::lapic, input::ps2_keyboard, tsc_deadline},
     print, scheduler, warn,
+    x86_64::idt::READ_COMMAND_VECTOR,
 };
 
 pub static INPUT_BUFFER: Mutex<String> = Mutex::new(String::new());

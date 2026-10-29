@@ -10,10 +10,10 @@ use spin::once::Once;
 use x86_64::{PhysAddr, VirtAddr};
 
 use crate::{
-    arch::x86_64::idt::KEYBOARD_VECTOR,
     drivers::apic::lapic,
     info,
     memory::address::{PhysExt, VirtExt},
+    x86_64::idt::KEYBOARD_VECTOR,
 };
 
 /// Register Select offset relative to I/O APIC MMIO base.

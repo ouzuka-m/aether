@@ -7,7 +7,7 @@
 use spin::lazylock::LazyLock;
 use x86_64::structures::idt::InterruptDescriptorTable;
 
-use crate::arch::x86_64::{
+use crate::x86_64::{
     interrupts::{exceptions, hardware, software},
     ist,
 };

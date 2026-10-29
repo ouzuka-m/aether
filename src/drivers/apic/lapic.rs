@@ -9,9 +9,9 @@ use spin::once::Once;
 use x86_64::{PhysAddr, VirtAddr};
 
 use crate::{
-    arch::x86_64::idt::SVR_VECTOR,
     debug, info,
     memory::address::{PhysExt, VirtExt},
+    x86_64::idt::SVR_VECTOR,
 };
 
 /// Offset for the Local APIC ID register.
