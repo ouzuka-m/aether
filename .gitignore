@@ -4,3 +4,4 @@ initramfs.tar
 *.iso
 *.elf
 *.bin
+*.o

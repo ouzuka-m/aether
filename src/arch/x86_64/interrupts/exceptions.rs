@@ -192,8 +192,8 @@ pub extern "x86-interrupt" fn page_fault(_: InterruptStackFrame, error: PageFaul
     let faulting_address = Cr2::read_raw();
 
     panic!(
-        "Page Fault (#PF) at {faulting_address:#x} with error code {:#x}",
-        error.bits()
+        "Page Fault (#PF) at {faulting_address:#x} with code {:#?}",
+        error
     );
 }
 

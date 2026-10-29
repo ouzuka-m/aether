@@ -17,7 +17,7 @@ mod boot;
 mod config;
 mod display;
 mod drivers;
-mod fs;
+mod initramfs;
 mod log;
 mod memory;
 mod qemu;
@@ -26,10 +26,11 @@ mod scheduler;
 use core::panic::PanicInfo;
 use x86_64::instructions::{self, interrupts};
 
+use crate::initramfs::TAR;
+
 use self::{
     arch::x86_64::{gdt, idt},
     display::greet,
-    fs::tarfs,
     memory::heap_allocator,
 };
 
@@ -65,22 +66,25 @@ extern "C" fn _start() -> ! {
     // Initialize all subsystems
     drivers::init();
 
-    // Initialize virtual file system (VFS)
-    tarfs::init();
-
     // Greet to the screen
     greet::welcome();
 
-    info!("Kernel initialized successfully. Entering idle loop.");
+    info!("Kernel initialized successfully. Executing `/bin/init`.");
 
     qemu::exit::success();
 
+    interrupts::enable();
+
+    if let Err(error) = TAR.spawn("/bin/init.bin") {
+        panic!("Failed to execute `/bin/init.bin`: {error:#?}");
+    };
+
+    scheduler::activate();
+
     prompt!();
 
-    // Enable CPU interrupts and enter low-power idle loop
     loop {
-        // Re-enable interrupts and halt CPU until next hardware interrupt arrives
-        interrupts::enable_and_hlt();
+        instructions::hlt();
     }
 }
 
