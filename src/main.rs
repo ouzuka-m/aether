@@ -69,12 +69,13 @@ extern "C" fn _start() -> ! {
     // Greet to the screen
     greet::welcome();
 
-    info!("Kernel initialized successfully. Executing `/bin/init`.");
+    interrupts::enable();
+
+    info!("Kernel initialized successfully. ");
 
     qemu::exit::success();
 
-    interrupts::enable();
-
+    info!("Executing `/bin/init.bin`");
     if let Err(error) = TAR.spawn("/bin/init.bin") {
         panic!("Failed to execute `/bin/init.bin`: {error:#?}");
     };
