@@ -71,7 +71,7 @@ extern "C" fn _start() -> ! {
 
     interrupts::enable();
 
-    info!("Kernel initialized successfully. ");
+    info!("Kernel initialized successfully");
 
     qemu::exit::success();
 
