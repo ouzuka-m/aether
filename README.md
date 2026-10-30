@@ -110,7 +110,7 @@ qemu-system-x86_64 \
 2. **Early CPU Architecture**: Disables CPU interrupts (`cli`), initializes COM1 UART serial output for logging, configures the Global Descriptor Table (GDT) and Task State Segment (TSS) with dedicated Interrupt Stack Table (IST) stacks, and loads the Interrupt Descriptor Table (IDT).
 3. **Memory Management**: Constructs the virtual memory page mapper via HHDM from `CR3`, builds a bitmap-based physical frame allocator from the memory map, maps 1 MiB of pages starting at `0xFFFF_9000_0000_0000`, and initializes the buddy heap allocator.
 4. **Drivers & Interrupt Routing**: Parses ACPI tables from RSDP, disables legacy 8259 PICs, initializes the High Precision Event Timer (HPET), enables the Local APIC, calibrates and arms the TSC-Deadline timer, and routes PS/2 keyboard IRQs through the I/O APIC.
-5. **Filesystem & Display**: Parses `initramfs.tar` (USTAR module) via TarFS, displays system hardware information and CPU brand on the framebuffer, triggers QEMU debug-exit (for automated CI testing), prints the prompt (`$ `), and enters an interrupt-driven `hlt` idle loop (`sti; hlt`). (Deprecated)
+5. **Jump to Init Program**: Parses `initramfs.tar` (USTAR module) via TarFS, displays system hardware information and CPU brand on the framebuffer, triggers QEMU debug-exit (for automated CI testing), executes init program (`/bin/init.bin`), prints the prompt (`$ `), and enters idle loop (`lt`).
 
 ## Directory Layout
 
@@ -120,15 +120,15 @@ regesa/
 ├── iso/            ISO structure with Limine bootloader binaries
 ├── rootfs/         Root filesystem files packed into initramfs
 ├── src/            Kernel source code
-│   ├── arch/         Architecture-specific code (x86_64)
 │   ├── boot/         Boot initialization
 │   ├── display/      Framebuffer and text rendering
 │   ├── drivers/      Device drivers
-│   ├── fs/           Filesystem (tarfs)
+│   ├── initramfs/    Initramfs parser and reader (tarfs)
 │   ├── log/          Kernel logging
 │   ├── memory/       Frame allocator, mapper, heap
 │   ├── qemu/         QEMU integration utilities
 │   ├── scheduler/    Scheduler and task management
+│   ├── x86_64/       x86_64 arch-specific code
 │   ├── config.rs     Kernel configuration
 │   └── main.rs       Kernel entry point
 ├── targets/        Custom target specification (x86_64-unknown-none.json)
